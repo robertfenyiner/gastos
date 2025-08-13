@@ -28,12 +28,17 @@ check_node() {
 check_npm() {
     if command -v npm >/dev/null 2>&1; then
         echo -e "${YELLOW}npm ya está instalado: $(npm --version)${NC}"
-        echo -e "${GREEN}Actualizando npm...${NC}"
-        sudo npm install -g npm@latest
+        NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d 'v')
+        if [ "$NODE_MAJOR" -ge 20 ]; then
+            echo -e "${GREEN}Actualizando npm...${NC}"
+            sudo npm install -g npm@latest
+        else
+            echo -e "${YELLOW}No se actualizará npm porque Node.js < 20. Usando versión actual.${NC}"
+        fi
     else
         echo -e "${RED}npm no está instalado, instalando Node.js primero...${NC}"
         check_node
-        sudo npm install -g npm@latest
+        # No actualizar npm si Node.js < 20
     fi
 }
 
@@ -69,6 +74,37 @@ check_pm2() {
     fi
 }
 
+clean_previous_install() {
+    echo -e "${YELLOW}Limpiando instalación anterior de $APP_NAME...${NC}"
+    # Detener y eliminar procesos PM2 relacionados
+    if command -v pm2 >/dev/null 2>&1; then
+        pm2 stop "$APP_NAME" || true
+        pm2 delete "$APP_NAME" || true
+        pm2 stop all || true
+        pm2 delete all || true
+    fi
+    # Eliminar directorio del proyecto
+    if [ -d "$APP_DIR" ]; then
+        sudo rm -rf "$APP_DIR"
+        echo -e "${GREEN}Directorio $APP_DIR eliminado.${NC}"
+    fi
+    # Eliminar base de datos
+    if [ -f "$DB_PATH" ]; then
+        sudo rm -f "$DB_PATH"
+        echo -e "${GREEN}Base de datos $DB_PATH eliminada.${NC}"
+    fi
+    # Eliminar configuración Nginx
+    NGINX_CONFIG="/etc/nginx/sites-available/$APP_NAME"
+    if [ -f "$NGINX_CONFIG" ]; then
+        sudo rm -f "$NGINX_CONFIG"
+        echo -e "${GREEN}Config Nginx $NGINX_CONFIG eliminada.${NC}"
+    fi
+    if [ -L "/etc/nginx/sites-enabled/$APP_NAME" ]; then
+        sudo rm -f "/etc/nginx/sites-enabled/$APP_NAME"
+    fi
+    sudo nginx -t && sudo systemctl reload nginx
+}
+
 # 1. Actualizar sistema y herramientas básicas
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl wget git unzip software-properties-common build-essential
@@ -83,6 +119,9 @@ check_nginx
 # 4. Verificar/instalar PM2 y limpiar procesos previos
 check_pm2
 pm2 startup systemd -u ubuntu --hp /home/ubuntu
+
+# Limpiar instalación anterior antes de continuar
+clean_previous_install
 
 # 5. Clonar el repositorio
 if [ ! -d "$APP_DIR" ]; then
@@ -116,6 +155,8 @@ fi
 # 8. Instalar dependencias y construir frontend
 cd "$APP_DIR/server"
 sudo -u ubuntu npm install --production
+
+# Solo instala y construye el frontend desde el directorio client
 cd "$APP_DIR/client"
 sudo -u ubuntu npm install
 sudo -u ubuntu npm run build
