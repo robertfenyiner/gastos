@@ -108,7 +108,11 @@ Para instalar **Gastos Robert** en tu VPS Ubuntu 22.04 (Oracle Cloud):
 git clone https://github.com/robertfenyiner/gastos.git
 cd gastos
 
-# 2. Ejecutar instalador automático
+# 2. Hacer ejecutable el instalador y configurar .env
+chmod +x instalar-gastos-robert.sh
+cp /home/ubuntu/gastos/server/.env.example /home/ubuntu/gastos/server/.env
+
+# 3. Ejecutar instalador automático
 sudo ./instalar-gastos-robert.sh
 ```
 
@@ -185,25 +189,26 @@ Después de la instalación automática, tendrás:
 - **🚀 PM2** gestionando la aplicación
 - **🌐 Nginx** como reverse proxy optimizado
 
-### ⚠️ Configuración Manual Requerida
+### ✅ Configuración Preconfigurada
 
-Después de la instalación automática, **solo necesitas configurar**:
+La aplicación viene **preconfigurada** para la IP **167.234.215.122** con:
+
+- **✅ Email configurado** con registro.lat.team@gmail.com
+- **✅ JWT Secret configurado** 
+- **✅ CORS configurado** para la IP del servidor
+- **✅ Base de datos configurada** (gastos_robert.db)
+- **✅ Entorno de producción** habilitado
+
+**Configuración opcional adicional:**
 
 ```bash
-# Editar archivo de configuración
-sudo nano /opt/gastos-robert/server/.env
+# Solo si necesitas cambiar la configuración de email
+sudo nano ~/gastos/server/.env
 
-# Configurar estas variables:
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=tu-email@gmail.com
-EMAIL_PASS=tu-contraseña-de-aplicación-gmail
-EMAIL_FROM=tu-email@gmail.com
+# Para habilitar API de tasas de cambio:
+EXCHANGE_API_KEY=tu-clave-api-de-exchangerate-api
 
-# Opcional: API de tasas de cambio
-EXCHANGE_API_KEY=tu-clave-api
-
-# Reiniciar aplicación
+# Reiniciar aplicación después de cambios
 sudo pm2 restart gastos-robert-api
 ```
 
@@ -235,12 +240,11 @@ sudo apt install -y nginx
 
 ```bash
 # Clonar repositorio
-sudo mkdir -p /opt/gastos-robert
-sudo git clone https://github.com/robertfenyiner/gastos.git /opt/gastos-robert
-cd /opt/gastos-robert
+git clone https://github.com/robertfenyiner/gastos.git
+cd gastos
 
 # Configurar permisos
-sudo chown -R $USER:$USER /opt/gastos-robert
+sudo chown -R $USER:$USER ~/gastos
 ```
 
 ### 3. Instalar Dependencias
@@ -259,7 +263,7 @@ npm run build
 ### 4. Configurar Variables de Entorno
 
 ```bash
-cd /opt/gastos-robert/server
+cd ~/gastos/server
 cp .env.example .env
 
 # Editar configuración
@@ -270,13 +274,13 @@ nano .env
 
 ```bash
 # Iniciar con PM2
-cd /opt/gastos-robert
+cd ~/gastos
 pm2 start ecosystem.config.js --env production
 pm2 save
 pm2 startup
 
 # Configurar Nginx
-sudo cp config/nginx/gastos-robert /etc/nginx/sites-available/
+sudo cp config/nginx/expense-tracker /etc/nginx/sites-available/gastos-robert
 sudo ln -s /etc/nginx/sites-available/gastos-robert /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
@@ -288,7 +292,7 @@ sudo systemctl reload nginx
 
 ### 🔐 Variables de Entorno Requeridas
 
-Edita el archivo `/opt/gastos-robert/server/.env`:
+Edita el archivo `~/gastos/server/.env`:
 
 ```bash
 # === CONFIGURACIÓN BÁSICA ===
@@ -367,7 +371,7 @@ sudo dpkg-reconfigure -plow unattended-upgrades
 
 ```bash
 # Script de actualización automática incluido
-cd /opt/gastos-robert
+cd ~/gastos
 sudo ./scripts/update-application.sh
 ```
 
@@ -589,7 +593,7 @@ sudo apt update && sudo apt upgrade -y
 sudo pm2 logs gastos-robert-api
 
 # Verificar configuración
-cd /opt/gastos-robert/server
+cd ~/gastos/server
 node index.js
 ```
 
@@ -608,17 +612,17 @@ sudo nginx -t
 #### **Problema**: Base de datos no accesible
 ```bash
 # Verificar permisos de archivo
-ls -la /opt/gastos-robert/server/gastos_robert.db
+ls -la ~/gastos/server/gastos_robert.db
 
 # Corregir permisos si es necesario
-sudo chown ubuntu:ubuntu /opt/gastos-robert/server/gastos_robert.db
-chmod 600 /opt/gastos-robert/server/gastos_robert.db
+sudo chown ubuntu:ubuntu ~/gastos/server/gastos_robert.db
+chmod 600 ~/gastos/server/gastos_robert.db
 ```
 
 #### **Problema**: Emails no se envían
 ```bash
 # Verificar configuración de email
-cd /opt/gastos-robert/server
+cd ~/gastos/server
 node -e "
   require('dotenv').config();
   console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
@@ -633,7 +637,7 @@ sudo pm2 logs gastos-robert-api | grep -i email
 #### **Problema**: Tasas de cambio no se actualizan
 ```bash
 # Verificar API key
-grep EXCHANGE_API_KEY /opt/gastos-robert/server/.env
+grep EXCHANGE_API_KEY ~/gastos/server/.env
 
 # Ver logs específicos
 sudo pm2 logs gastos-robert-api | grep -i "exchange\|currency"

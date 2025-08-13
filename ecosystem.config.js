@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'gastos-robert-api',
     script: './server/index.js',
-    cwd: '/opt/gastos-robert',
+    cwd: process.cwd() || '/home/ubuntu/gastos',
     instances: 1, // Change to 'max' for production with multiple CPU cores
     exec_mode: 'fork', // Use 'cluster' with multiple instances
     env: {
@@ -66,7 +66,7 @@ module.exports = {
       host: ['167.234.215.122'],
       ref: 'origin/main',
       repo: 'https://github.com/robertfenyiner/gastos.git',
-      path: '/opt/gastos-robert',
+      path: '/home/ubuntu/gastos',
       'pre-deploy-local': '',
       'post-deploy': 'npm install --production && cd client && npm install && npm run build && cd .. && pm2 reload ecosystem.config.js --env production',
       'pre-setup': ''

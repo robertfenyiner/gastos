@@ -42,7 +42,7 @@ server {
 
     # Servir archivos estáticos de React
     location / {
-        root /opt/gastos-robert/client/build;
+        root /home/ubuntu/gastos/client/build;
         index index.html index.htm;
         try_files $uri $uri/ /index.html;
         

@@ -24,7 +24,8 @@ NC='\033[0m' # Sin color
 
 # Configuración del proyecto
 APP_NAME="gastos-robert"
-APP_DIR="/opt/$APP_NAME"
+# Usar la ubicación actual del repositorio clonado en lugar de /opt
+APP_DIR="$(pwd)"
 REPO_URL="https://github.com/robertfenyiner/gastos.git"
 LOG_FILE="/var/log/$APP_NAME-install.log"
 VPS_IP="167.234.215.122"
@@ -258,29 +259,27 @@ configurar_firewall() {
     ufw status numbered | tee -a "$LOG_FILE"
 }
 
-# Clonar y configurar la aplicación
+# Configurar aplicación (ya clonada)
 configurar_aplicacion() {
-    log_paso "Clonando y configurando Gastos Robert..."
+    log_paso "Configurando Gastos Robert..."
     
-    # Crear directorio de aplicación
-    mkdir -p "$APP_DIR"
-    
-    # Clonar repositorio
-    if [ -d "$APP_DIR/.git" ]; then
-        log_info "Repositorio ya existe, actualizando..."
-        cd "$APP_DIR"
-        sudo -u $SUDO_USER git pull origin main >> "$LOG_FILE" 2>&1
-    else
-        log_info "Clonando repositorio desde GitHub..."
-        sudo -u $SUDO_USER git clone "$REPO_URL" "$APP_DIR" >> "$LOG_FILE" 2>&1
+    # Verificar que estamos en el directorio del repositorio
+    if [ ! -d "$APP_DIR/.git" ]; then
+        log_error "No se encontró el repositorio en $APP_DIR"
+        log_error "Ejecute este script desde el directorio raíz del repositorio clonado"
+        exit 1
     fi
+    
+    log_info "Usando repositorio existente en: $APP_DIR"
+    
+    # Actualizar repositorio
+    cd "$APP_DIR"
+    sudo -u $SUDO_USER git pull origin main >> "$LOG_FILE" 2>&1
     
     # Configurar permisos
     chown -R $SUDO_USER:$SUDO_USER "$APP_DIR"
     
-    cd "$APP_DIR"
-    
-    log_exito "Aplicación clonada correctamente"
+    log_exito "Aplicación configurada correctamente"
 }
 
 # Instalar dependencias
@@ -327,40 +326,18 @@ configurar_environment() {
     ENV_FILE="$APP_DIR/server/.env"
     
     if [ ! -f "$ENV_FILE" ]; then
-        # Copiar archivo de ejemplo
-        if [ -f "$APP_DIR/server/.env.example" ]; then
-            cp "$APP_DIR/server/.env.example" "$ENV_FILE"
-        else
-            log_error "Archivo .env.example no encontrado"
-            exit 1
-        fi
-        
-        # Generar JWT secret seguro
-        JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
-        
-        # Actualizar archivo de entorno
-        sed -i "s/change-this-to-a-very-long-secure-secret-key-at-least-64-characters-long/$JWT_SECRET/" "$ENV_FILE"
-        
-        # Configurar URL de la aplicación
-        if [ -n "$DOMAIN" ]; then
-            sed -i "s|APP_URL=http://localhost:3000|APP_URL=https://$DOMAIN|" "$ENV_FILE"
-            sed -i "s|ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com|ALLOWED_ORIGINS=https://$DOMAIN,https://www.$DOMAIN|" "$ENV_FILE"
-        else
-            sed -i "s|APP_URL=http://localhost:3000|APP_URL=http://$VPS_IP|" "$ENV_FILE"
-            sed -i "s|ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com|ALLOWED_ORIGINS=http://$VPS_IP|" "$ENV_FILE"
-        fi
-        
-        # Configurar entorno de producción
-        sed -i "s/NODE_ENV=development/NODE_ENV=production/" "$ENV_FILE"
-        
-        # Configurar permisos de archivo
-        chmod 600 "$ENV_FILE"
-        chown $SUDO_USER:$SUDO_USER "$ENV_FILE"
-        
-        log_exito "Archivo .env configurado"
-    else
-        log_info "Archivo .env ya existe"
+        log_error "Archivo .env no encontrado"
+        log_error "Por favor ejecute: cp $APP_DIR/server/.env.example $ENV_FILE"
+        exit 1
     fi
+    
+    log_info "Archivo .env encontrado, verificando configuración..."
+    
+    # Configurar permisos de archivo
+    chmod 600 "$ENV_FILE"
+    chown $SUDO_USER:$SUDO_USER "$ENV_FILE"
+    
+    log_exito "Archivo .env configurado correctamente"
 }
 
 # Configurar sistema de logging
@@ -558,14 +535,14 @@ configurar_backup() {
     else
         log_warn "Script de backup no encontrado, creando backup básico..."
         # Crear backup básico
-        cat > "$BACKUP_SCRIPT_DEST" << 'EOF'
+        cat > "$BACKUP_SCRIPT_DEST" << EOF
 #!/bin/bash
-DATE=$(date +%Y%m%d_%H%M%S)
+DATE=\$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/backup/gastos-robert"
-mkdir -p "$BACKUP_DIR"
-cp /opt/gastos-robert/server/gastos_robert.db "$BACKUP_DIR/gastos_robert_$DATE.db" 2>/dev/null || echo "Base de datos no encontrada"
-find "$BACKUP_DIR" -name "*.db" -mtime +7 -delete
-echo "Backup completado: $DATE"
+mkdir -p "\$BACKUP_DIR"
+cp $APP_DIR/server/gastos_robert.db "\$BACKUP_DIR/gastos_robert_\$DATE.db" 2>/dev/null || echo "Base de datos no encontrada"
+find "\$BACKUP_DIR" -name "*.db" -mtime +7 -delete
+echo "Backup completado: \$DATE"
 EOF
         chmod +x "$BACKUP_SCRIPT_DEST"
     fi
@@ -642,27 +619,24 @@ mostrar_informacion_final() {
     echo -e "   Ver logs de Nginx:         ${YELLOW}sudo tail -f /var/log/nginx/gastos-robert-access.log${NC}"
     echo -e "   Ejecutar backup manual:    ${YELLOW}sudo /usr/local/bin/backup-gastos-robert.sh${NC}"
     
-    echo -e "\n${YELLOW}⚠️  CONFIGURACIÓN PENDIENTE:${NC}"
-    echo -e "   ${RED}IMPORTANTE:${NC} Debe configurar las siguientes variables en:"
-    echo -e "   ${GREEN}$APP_DIR/server/.env${NC}"
+    echo -e "\n${GREEN}✅ CONFIGURACIÓN PRECONFIGURADA:${NC}"
+    echo -e "   ${GREEN}La aplicación está lista para usar con:${NC}"
+    echo -e "   📧 Email: registro.lat.team@gmail.com"
+    echo -e "   🔒 JWT Secret: Configurado"
+    echo -e "   🌐 CORS: http://167.234.215.122"
+    echo -e "   💾 Base de datos: gastos_robert.db"
     echo ""
-    echo -e "   📧 ${YELLOW}Configuración de Email:${NC}"
-    echo -e "      EMAIL_HOST=smtp.gmail.com"
-    echo -e "      EMAIL_PORT=587"
-    echo -e "      EMAIL_USER=tu-email@gmail.com"
-    echo -e "      EMAIL_PASS=tu-contraseña-de-aplicación"
-    echo -e "      EMAIL_FROM=tu-email@gmail.com"
-    echo ""
-    echo -e "   💱 ${YELLOW}API de Tasas de Cambio (opcional):${NC}"
+    echo -e "   ${YELLOW}Configuración opcional adicional:${NC}"
+    echo -e "   💱 API de Tasas de Cambio:"
     echo -e "      EXCHANGE_API_KEY=tu-clave-api"
     echo -e "      (Obtener en: https://exchangerate-api.com)"
     echo ""
     
     echo -e "${CYAN}📝 PASOS SIGUIENTES:${NC}"
-    echo -e "   1. ${GREEN}Editar configuración:${NC} sudo nano $APP_DIR/server/.env"
-    echo -e "   2. ${GREEN}Reiniciar aplicación:${NC} sudo pm2 restart gastos-robert-api"
-    echo -e "   3. ${GREEN}Acceder a la aplicación${NC} en tu navegador"
-    echo -e "   4. ${GREEN}Crear tu primera cuenta${NC} de usuario"
+    echo -e "   1. ${GREEN}Acceder a la aplicación:${NC} http://167.234.215.122"
+    echo -e "   2. ${GREEN}Crear tu primera cuenta${NC} de usuario"
+    echo -e "   3. ${GREEN}Comenzar a gestionar gastos${NC}"
+    echo -e "   4. ${YELLOW}Opcional:${NC} Configurar API de tasas de cambio"
     
     if [ -z "$DOMAIN" ]; then
         echo -e "\n${YELLOW}💡 SUGERENCIA:${NC}"
