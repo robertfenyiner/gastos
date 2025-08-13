@@ -70,8 +70,12 @@ const Login: React.FC = () => {
                 {...register('email', {
                   required: 'Email is required',
                   pattern: {
-                    value: /^\S+@\S+$/i,
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                     message: 'Please enter a valid email address'
+                  },
+                  maxLength: {
+                    value: 254,
+                    message: 'Email is too long'
                   }
                 })}
                 type="email"
@@ -92,8 +96,12 @@ const Login: React.FC = () => {
                   {...register('password', {
                     required: 'Password is required',
                     minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters'
+                      value: 8,
+                      message: 'Password must be at least 8 characters'
+                    },
+                    maxLength: {
+                      value: 128,
+                      message: 'Password is too long'
                     }
                   })}
                   type={showPassword ? 'text' : 'password'}

@@ -1,7 +1,7 @@
 {
-  "name": "expense-tracker-server",
+  "name": "gastos-robert-server",
   "version": "1.0.0",
-  "description": "Backend API for expense tracker",
+  "description": "API Backend para Gastos Robert - Aplicación de gestión de gastos personales",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

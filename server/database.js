@@ -1,12 +1,13 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'expense_tracker.db');
+// Cambiar nombre de base de datos para reflejar el nuevo nombre del proyecto
+const dbPath = path.join(__dirname, 'gastos_robert.db');
 const db = new sqlite3.Database(dbPath);
 
-// Initialize database with tables
+// Inicializar base de datos con tablas
 db.serialize(() => {
-  // Users table
+  // Tabla de usuarios
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +19,7 @@ db.serialize(() => {
     )
   `);
 
-  // Categories table
+  // Tabla de categorías
   db.run(`
     CREATE TABLE IF NOT EXISTS categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +32,7 @@ db.serialize(() => {
     )
   `);
 
-  // Currencies table
+  // Tabla de monedas
   db.run(`
     CREATE TABLE IF NOT EXISTS currencies (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +44,7 @@ db.serialize(() => {
     )
   `);
 
-  // Expenses table
+  // Tabla de gastos
   db.run(`
     CREATE TABLE IF NOT EXISTS expenses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,7 +65,7 @@ db.serialize(() => {
     )
   `);
 
-  // Email reminders table
+  // Tabla de recordatorios de email
   db.run(`
     CREATE TABLE IF NOT EXISTS email_reminders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,15 +79,15 @@ db.serialize(() => {
     )
   `);
 
-  // Insert default currencies
+  // Insertar monedas por defecto
   const currencies = [
-    ['USD', 'US Dollar', '$'],
+    ['USD', 'Dólar Americano', '$'],
     ['EUR', 'Euro', '€'],
-    ['COP', 'Colombian Peso', '$'],
-    ['CAD', 'Canadian Dollar', 'C$'],
-    ['GBP', 'British Pound', '£'],
-    ['JPY', 'Japanese Yen', '¥'],
-    ['MXN', 'Mexican Peso', '$']
+    ['COP', 'Peso Colombiano', '$'],
+    ['CAD', 'Dólar Canadiense', 'C$'],
+    ['GBP', 'Libra Esterlina', '£'],
+    ['JPY', 'Yen Japonés', '¥'],
+    ['MXN', 'Peso Mexicano', '$']
   ];
 
   const insertCurrency = db.prepare(`

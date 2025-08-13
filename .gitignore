@@ -1,148 +1,118 @@
-# Dependencies
-node_modules/
-*/node_modules/
+# =============================================================================
+# GITIGNORE - GASTOS ROBERT
+# =============================================================================
 
-# Environment variables
+# =============================================================================
+# NODE.JS Y NPM
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tgz
+.npm
+.yarn-integrity
+
+# =============================================================================
+# VARIABLES DE ENTORNO Y CONFIGURACIÓN SENSIBLE
+# =============================================================================
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Database
-*.db
+# =============================================================================
+# BASE DE DATOS
+# =============================================================================
 *.sqlite
 *.sqlite3
+*.db
+gastos_robert.db
+expense_tracker.db
+*.sql
+*.dump
 
-# Logs
-logs
+# =============================================================================
+# LOGS Y ARCHIVOS TEMPORALES
+# =============================================================================
+logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-
-# Runtime data
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons
-build/Release
-
-# Dependency directories
-node_modules/
-jspm_packages/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-out
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# React build
+# =============================================================================
+# REACT BUILD Y DESARROLLO
+# =============================================================================
 client/build/
+client/dist/
+client/.eslintcache
 
-# Reports
-server/reports/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE files
+# =============================================================================
+# EDITORES E IDES
+# =============================================================================
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
-*~
 
-# Temporary files
+# =============================================================================
+# ARCHIVOS DEL SISTEMA OPERATIVO
+# =============================================================================
+.DS_Store
+Thumbs.db
+*.lnk
+
+# =============================================================================
+# ARCHIVOS DE CACHE Y TEMPORALES
+# =============================================================================
+.cache/
+.parcel-cache/
 tmp/
 temp/
+
+# =============================================================================
+# PM2
+# =============================================================================
+.pm2/
+
+# =============================================================================
+# CERTIFICADOS SSL Y ARCHIVOS DE SEGURIDAD
+# =============================================================================
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+id_rsa
+id_rsa.pub
+
+# =============================================================================
+# ARCHIVOS DE BACKUP
+# =============================================================================
+*.backup
+*.bak
+*.old
+*.orig
+*.tmp
+*.zip
+*.tar.gz
+
+# =============================================================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# =============================================================================
+server/reports/*.pdf
+server/uploads/*
+!server/uploads/.gitkeep
+maintenance.html
+
+# =============================================================================
+# TEST Y COVERAGE
+# =============================================================================
+coverage/
+.nyc_output/
+*.lcov
