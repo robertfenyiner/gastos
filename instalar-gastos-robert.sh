@@ -135,6 +135,16 @@ pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME"
 # Limpiar instalación anterior antes de continuar
 clean_previous_install
 
+# Limpiar cualquier instalación previa en /root/gastos-robert y /home/robert/gastos-robert
+if [ -d "/root/gastos-robert" ]; then
+    echo -e "${YELLOW}Eliminando instalación previa en /root/gastos-robert...${NC}"
+    sudo rm -rf /root/gastos-robert
+fi
+if [ -d "/home/robert/gastos-robert" ]; then
+    echo -e "${YELLOW}Eliminando instalación previa en /home/robert/gastos-robert...${NC}"
+    sudo rm -rf /home/robert/gastos-robert
+fi
+
 # 5. Clonar el repositorio
 if [ ! -d "$APP_DIR" ]; then
     git clone "$REPO_URL" "$APP_DIR"
