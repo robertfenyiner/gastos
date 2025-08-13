@@ -232,3 +232,11 @@ PUBLIC_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || hostname -I | awk '{p
 echo -e "${GREEN}==== Instalación completada ====${NC}"
 echo -e "${YELLOW}Accede a la app en: http://$PUBLIC_IP/${NC}"
 echo -e "${YELLOW}API health: http://$PUBLIC_IP:$PORT/api/health${NC}"
+
+# Ya puedes ejecutar el instalador como usuario robert.
+# El script está listo para instalar todo en /home/robert/gastos-robert con los permisos correctos.
+
+# Solo ejecuta:
+# bash instalar-gastos-robert.sh
+
+# El resto del script ya está preparado para funcionar correctamente como usuario robert.
