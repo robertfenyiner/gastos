@@ -1,9 +1,29 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-// Cambiar nombre de base de datos para reflejar el nuevo nombre del proyecto
-const dbPath = path.join(__dirname, 'gastos_robert.db');
-const db = new sqlite3.Database(dbPath);
+// Usar variable de entorno para el path de la base de datos si existe
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'gastos_robert.db');
+
+// Crear archivo de base de datos si no existe
+if (!fs.existsSync(dbPath)) {
+  try {
+    fs.writeFileSync(dbPath, '');
+    console.log(`[${new Date().toISOString()}] Archivo de base de datos creado en: ${dbPath}`);
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Error creando archivo de base de datos:`, err.message);
+    process.exit(1);
+  }
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error(`[${new Date().toISOString()}] Error al abrir la base de datos:`, err.message);
+    process.exit(1);
+  } else {
+    console.log(`[${new Date().toISOString()}] Base de datos abierta en: ${dbPath}`);
+  }
+});
 
 // Inicializar base de datos con tablas
 db.serialize(() => {
@@ -52,7 +72,7 @@ db.serialize(() => {
       category_id INTEGER NOT NULL,
       currency_id INTEGER NOT NULL,
       amount DECIMAL(10,2) NOT NULL,
-      description TEXT NOT NULL,
+      description TEXT,
       date DATE NOT NULL,
       is_recurring BOOLEAN DEFAULT FALSE,
       recurring_frequency VARCHAR(20),

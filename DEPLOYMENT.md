@@ -109,11 +109,11 @@ sudo chown $USER:$USER /opt/expense-tracker
 ```bash
 # Clonar repositorio
 cd /opt
-sudo git clone <URL_DEL_REPOSITORIO> expense-tracker
-cd expense-tracker
+sudo git clone <URL_DEL_REPOSITORIO> gastos-robert
+cd gastos-robert
 
 # Cambiar permisos
-sudo chown -R $USER:$USER /opt/expense-tracker
+sudo chown -R $USER:$USER /opt/gastos-robert
 
 # Instalar dependencias del servidor
 cd server
@@ -133,7 +133,7 @@ ls -la build/
 ### Paso 7: Configurar Variables de Entorno
 
 ```bash
-cd /opt/expense-tracker/server
+cd /opt/gastos-robert/server
 
 # Crear archivo .env
 nano .env
@@ -178,7 +178,7 @@ sudo chown $USER:$USER /var/log/expense-tracker
 ### Paso 8: Configurar PM2
 
 ```bash
-cd /opt/expense-tracker
+cd /opt/gastos-robert
 
 # Crear archivo de configuración PM2
 cat > ecosystem.config.js << 'EOF'
@@ -186,7 +186,7 @@ module.exports = {
   apps: [{
     name: 'expense-tracker-api',
     script: './server/index.js',
-    cwd: '/opt/expense-tracker',
+    cwd: '/opt/gastos-robert',
     instances: 'max',
     exec_mode: 'cluster',
     env: {
