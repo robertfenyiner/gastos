@@ -4,7 +4,9 @@ set -e
 
 APP_NAME="gastos-robert"
 REPO_URL="https://github.com/robertfenyiner/gastos.git"
-APP_DIR="/home/ubuntu/$APP_NAME"
+USER_HOME="${HOME}"
+CURRENT_USER="$(whoami)"
+APP_DIR="$USER_HOME/$APP_NAME"
 DB_PATH="$APP_DIR/server/gastos_robert.db"
 PORT=5000
 
@@ -38,7 +40,6 @@ check_npm() {
     else
         echo -e "${RED}npm no está instalado, instalando Node.js primero...${NC}"
         check_node
-        # No actualizar npm si Node.js < 20
     fi
 }
 
@@ -66,7 +67,6 @@ check_pm2() {
         pm2 stop "$APP_NAME" || true
         pm2 delete "$APP_NAME" || true
     fi
-    # Detener todos los procesos PM2 si hay alguno corriendo
     if [ "$(pm2 list | grep -c 'online')" -gt 0 ]; then
         echo -e "${YELLOW}Deteniendo todos los procesos PM2 previos...${NC}"
         pm2 stop all || true
@@ -76,24 +76,20 @@ check_pm2() {
 
 clean_previous_install() {
     echo -e "${YELLOW}Limpiando instalación anterior de $APP_NAME...${NC}"
-    # Detener y eliminar procesos PM2 relacionados
     if command -v pm2 >/dev/null 2>&1; then
         pm2 stop "$APP_NAME" || true
         pm2 delete "$APP_NAME" || true
         pm2 stop all || true
         pm2 delete all || true
     fi
-    # Eliminar directorio del proyecto
     if [ -d "$APP_DIR" ]; then
         sudo rm -rf "$APP_DIR"
         echo -e "${GREEN}Directorio $APP_DIR eliminado.${NC}"
     fi
-    # Eliminar base de datos
     if [ -f "$DB_PATH" ]; then
         sudo rm -f "$DB_PATH"
         echo -e "${GREEN}Base de datos $DB_PATH eliminada.${NC}"
     fi
-    # Eliminar configuración Nginx
     NGINX_CONFIG="/etc/nginx/sites-available/$APP_NAME"
     if [ -f "$NGINX_CONFIG" ]; then
         sudo rm -f "$NGINX_CONFIG"
@@ -118,19 +114,19 @@ check_nginx
 
 # 4. Verificar/instalar PM2 y limpiar procesos previos
 check_pm2
-pm2 startup systemd -u ubuntu --hp /home/ubuntu
+pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME"
 
 # Limpiar instalación anterior antes de continuar
 clean_previous_install
 
 # 5. Clonar el repositorio
 if [ ! -d "$APP_DIR" ]; then
-    sudo -u ubuntu git clone "$REPO_URL" "$APP_DIR"
+    git clone "$REPO_URL" "$APP_DIR"
 else
     cd "$APP_DIR"
-    sudo -u ubuntu git pull origin main
+    git pull origin main
 fi
-sudo chown -R ubuntu:ubuntu "$APP_DIR"
+sudo chown -R "$CURRENT_USER":"$CURRENT_USER" "$APP_DIR"
 
 # 6. Configurar variables de entorno
 cd "$APP_DIR/server"
@@ -142,24 +138,30 @@ if ! grep -q "^JWT_SECRET=" .env; then
     echo "JWT_SECRET=$(openssl rand -hex 48)" >> .env
 fi
 chmod 600 .env
-sudo chown ubuntu:ubuntu .env
+sudo chown "$CURRENT_USER":"$CURRENT_USER" .env
 
 # 7. Crear base de datos si no existe
 if [ ! -f "$DB_PATH" ]; then
-    sudo -u ubuntu touch "$DB_PATH"
-    sudo chown ubuntu:ubuntu "$DB_PATH"
+    touch "$DB_PATH"
+    chown "$CURRENT_USER":"$CURRENT_USER" "$DB_PATH"
     chmod 600 "$DB_PATH"
     echo -e "${GREEN}Base de datos creada en $DB_PATH${NC}"
 fi
 
 # 8. Instalar dependencias y construir frontend
+echo -e "${GREEN}Instalando dependencias del backend...${NC}"
 cd "$APP_DIR/server"
-sudo -u ubuntu npm install --production
+npm install --production || { echo -e "${RED}Error en npm install --production (backend)${NC}"; exit 1; }
+echo -e "${GREEN}Dependencias del backend instaladas.${NC}"
 
-# Solo instala y construye el frontend desde el directorio client
+echo -e "${GREEN}Instalando dependencias del frontend...${NC}"
 cd "$APP_DIR/client"
-sudo -u ubuntu npm install
-sudo -u ubuntu npm run build
+npm install || { echo -e "${RED}Error en npm install (frontend)${NC}"; exit 1; }
+echo -e "${GREEN}Dependencias del frontend instaladas.${NC}"
+
+echo -e "${GREEN}Construyendo frontend...${NC}"
+npm run build || { echo -e "${RED}Error en npm run build (frontend)${NC}"; exit 1; }
+echo -e "${GREEN}Frontend construido correctamente.${NC}"
 
 # 9. Configurar Nginx
 NGINX_CONFIG="/etc/nginx/sites-available/$APP_NAME"
@@ -201,9 +203,12 @@ sudo systemctl reload nginx
 
 # 10. Iniciar la aplicación con PM2
 cd "$APP_DIR"
-sudo -u ubuntu pm2 start ecosystem.config.js --env production
-sudo -u ubuntu pm2 save
+pm2 start ecosystem.config.js --env production
+pm2 save
+
+# Obtener IP pública de forma universal
+PUBLIC_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || hostname -I | awk '{print $1}')
 
 echo -e "${GREEN}==== Instalación completada ====${NC}"
-echo -e "${YELLOW}Accede a la app en: http://$(curl -s http://checkip.amazonaws.com)/${NC}"
-echo -e "${YELLOW}API health: http://$(curl -s http://checkip.amazonaws.com):$PORT/api/health${NC}"
+echo -e "${YELLOW}Accede a la app en: http://$PUBLIC_IP/${NC}"
+echo -e "${YELLOW}API health: http://$PUBLIC_IP:$PORT/api/health${NC}"
