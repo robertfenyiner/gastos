@@ -52,15 +52,15 @@ const Register: React.FC = () => {
             <FiDollarSign className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Create your account
+            Crea tu cuenta
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Or{' '}
+            O{' '}
             <Link
               to="/login"
               className="font-medium text-primary-600 hover:text-primary-500"
             >
-              sign in to your existing account
+              inicia sesión en tu cuenta
             </Link>
           </p>
         </div>
@@ -75,7 +75,7 @@ const Register: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+                Usuario
               </label>
               <input
                 {...register('username', {
@@ -95,7 +95,7 @@ const Register: React.FC = () => {
                 })}
                 type="text"
                 className="input-field mt-1"
-                placeholder="Enter your username"
+                placeholder="Ingresa tu usuario"
               />
               {errors.username && (
                 <p className="mt-1 text-sm text-danger-600">{errors.username.message}</p>
@@ -104,7 +104,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Correo electrónico
               </label>
               <input
                 {...register('email', {
@@ -120,7 +120,7 @@ const Register: React.FC = () => {
                 })}
                 type="email"
                 className="input-field mt-1"
-                placeholder="Enter your email"
+                placeholder="Ingresa tu correo electrónico"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-danger-600">{errors.email.message}</p>
@@ -129,7 +129,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Contraseña
               </label>
               <div className="relative mt-1">
                 <input
@@ -150,7 +150,7 @@ const Register: React.FC = () => {
                   })}
                   type={showPassword ? 'text' : 'password'}
                   className="input-field pr-10"
-                  placeholder="Enter your password"
+                  placeholder="Ingresa tu contraseña"
                 />
                 <button
                   type="button"
@@ -171,7 +171,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+                Confirmar contraseña
               </label>
               <div className="relative mt-1">
                 <input
@@ -181,7 +181,7 @@ const Register: React.FC = () => {
                   })}
                   type={showConfirmPassword ? 'text' : 'password'}
                   className="input-field pr-10"
-                  placeholder="Confirm your password"
+                  placeholder="Confirma tu contraseña"
                 />
                 <button
                   type="button"
@@ -210,10 +210,10 @@ const Register: React.FC = () => {
               {isLoading ? (
                 <>
                   <LoadingSpinner size="sm" />
-                  <span className="ml-2">Creating account...</span>
+                  <span className="ml-2">Creando cuenta...</span>
                 </>
               ) : (
-                'Create account'
+                'Crear cuenta'
               )}
             </button>
           </div>

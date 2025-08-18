@@ -169,8 +169,8 @@ const Profile: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-gray-600">Manage your account information and security settings</p>
+  <h1 className="text-2xl font-bold text-gray-900">Configuración de perfil</h1>
+  <p className="text-gray-600">Gestiona tu información y seguridad</p>
       </div>
 
       {/* Success Message */}
@@ -186,7 +186,7 @@ const Profile: React.FC = () => {
           <div className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <FiUser className="w-5 h-5 mr-2" />
-              Profile Information
+              Información de perfil
             </h2>
 
             {errors.profile && (

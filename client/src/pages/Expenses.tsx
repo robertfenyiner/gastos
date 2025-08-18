@@ -225,8 +225,8 @@ const Expenses: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
-          <p className="text-gray-600">Manage your expenses and track your spending</p>
+          <h1 className="text-2xl font-bold text-gray-900">Gastos</h1>
+          <p className="text-gray-600">Gestiona tus gastos y controla tu presupuesto</p>
         </div>
         <button
           onClick={() => {
@@ -237,7 +237,7 @@ const Expenses: React.FC = () => {
           className="btn-primary mt-4 sm:mt-0"
         >
           <FiPlus className="w-5 h-5 mr-2" />
-          Add Expense
+          Agregar gasto
         </button>
       </div>
 
@@ -246,7 +246,7 @@ const Expenses: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Category
+              Filtrar por categoría
             </label>
             <select
               value={filterCategory}

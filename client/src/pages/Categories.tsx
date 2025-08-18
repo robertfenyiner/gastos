@@ -181,8 +181,8 @@ const Categories: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600">Organize your expenses with custom categories</p>
+          <h1 className="text-2xl font-bold text-gray-900">Categorías</h1>
+          <p className="text-gray-600">Organiza tus gastos con categorías personalizadas</p>
         </div>
         <button
           onClick={() => {
@@ -193,7 +193,7 @@ const Categories: React.FC = () => {
           className="btn-primary mt-4 sm:mt-0"
         >
           <FiPlus className="w-5 h-5 mr-2" />
-          Add Category
+          Agregar categoría
         </button>
       </div>
 

@@ -127,6 +127,7 @@ bash instalar-gastos-robert.sh
 El script `instalar-gastos-robert.sh` realiza automáticamente todos estos pasos:
 
 **Notas importantes del instalador:**
+- Copia automáticamente el archivo `.env` desde `server/.env` a la raíz del proyecto (`gastos-robert/.env`) para que PM2 y Node.js siempre encuentren las variables de entorno, evitando errores de JWT_SECRET y otros.
 - Valida que se ejecute como usuario 'nina' y muestra instrucciones para crearlo si no existe.
 - Elimina node_modules y package-lock.json antes de instalar dependencias del frontend.
 - Instala la versión correcta de react-scripts (5.0.1) antes de construir el frontend.

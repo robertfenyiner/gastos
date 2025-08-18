@@ -41,15 +41,15 @@ const Login: React.FC = () => {
             <FiDollarSign className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Inicia sesión en tu cuenta
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Or{' '}
+            O{' '}
             <Link
               to="/register"
               className="font-medium text-primary-600 hover:text-primary-500"
             >
-              create a new account
+              crea una cuenta nueva
             </Link>
           </p>
         </div>
@@ -64,7 +64,7 @@ const Login: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Correo electrónico
               </label>
               <input
                 {...register('email', {
@@ -80,7 +80,7 @@ const Login: React.FC = () => {
                 })}
                 type="email"
                 className="input-field mt-1"
-                placeholder="Enter your email"
+                placeholder="Ingresa tu correo electrónico"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-danger-600">{errors.email.message}</p>
@@ -89,7 +89,7 @@ const Login: React.FC = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Contraseña
               </label>
               <div className="relative mt-1">
                 <input
@@ -106,7 +106,7 @@ const Login: React.FC = () => {
                   })}
                   type={showPassword ? 'text' : 'password'}
                   className="input-field pr-10"
-                  placeholder="Enter your password"
+                  placeholder="Ingresa tu contraseña"
                 />
                 <button
                   type="button"
@@ -135,10 +135,10 @@ const Login: React.FC = () => {
               {isLoading ? (
                 <>
                   <LoadingSpinner size="sm" />
-                  <span className="ml-2">Signing in...</span>
+                  <span className="ml-2">Iniciando sesión...</span>
                 </>
               ) : (
-                'Sign in'
+                'Iniciar sesión'
               )}
             </button>
           </div>

@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
               <FiDollarSign className="w-6 h-6 text-primary-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Spent</p>
+              <p className="text-sm font-medium text-gray-600">Total Gastado</p>
               <p className="text-2xl font-bold text-gray-900">
                 ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
               <FiTrendingUp className="w-6 h-6 text-success-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+              <p className="text-sm font-medium text-gray-600">Total de Gastos</p>
               <p className="text-2xl font-bold text-gray-900">{totalExpenses}</p>
             </div>
           </div>
@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
               <FiCalendar className="w-6 h-6 text-warning-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Average Amount</p>
+              <p className="text-sm font-medium text-gray-600">Promedio</p>
               <p className="text-2xl font-bold text-gray-900">
                 ${avgAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
@@ -91,7 +91,7 @@ const Dashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Acciones rápidas</h3>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Link
@@ -99,28 +99,28 @@ const Dashboard: React.FC = () => {
             className="flex flex-col items-center p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors duration-200"
           >
             <FiPlus className="w-6 h-6 text-primary-600 mb-2" />
-            <span className="text-sm font-medium text-primary-700">Add Expense</span>
+            <span className="text-sm font-medium text-primary-700">Agregar gasto</span>
           </Link>
           <Link
             to="/expenses"
             className="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
           >
             <FiDollarSign className="w-6 h-6 text-gray-600 mb-2" />
-            <span className="text-sm font-medium text-gray-700">View All</span>
+            <span className="text-sm font-medium text-gray-700">Ver todos</span>
           </Link>
           <Link
             to="/categories"
             className="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
           >
             <FiTrendingUp className="w-6 h-6 text-gray-600 mb-2" />
-            <span className="text-sm font-medium text-gray-700">Categories</span>
+            <span className="text-sm font-medium text-gray-700">Categorías</span>
           </Link>
           <Link
             to="/profile"
             className="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
           >
             <FiCalendar className="w-6 h-6 text-gray-600 mb-2" />
-            <span className="text-sm font-medium text-gray-700">Settings</span>
+            <span className="text-sm font-medium text-gray-700">Configuración</span>
           </Link>
         </div>
       </div>
@@ -128,24 +128,24 @@ const Dashboard: React.FC = () => {
       {/* Recent Expenses */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Expenses</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Gastos recientes</h3>
           <Link
             to="/expenses"
             className="text-sm text-primary-600 hover:text-primary-700 font-medium"
           >
-            View all
+            Ver todos
           </Link>
         </div>
 
         {recentExpenses.length === 0 ? (
           <div className="text-center py-8">
             <FiDollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No expenses yet</p>
+            <p className="text-gray-500 mb-4">Aún no hay gastos</p>
             <Link
               to="/expenses?action=add"
               className="btn-primary"
             >
-              Add your first expense
+              Agrega tu primer gasto
             </Link>
           </div>
         ) : (
@@ -187,7 +187,7 @@ const Dashboard: React.FC = () => {
       {stats && stats.categoryStats.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Spending by Category</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Gasto por categoría</h3>
           </div>
           <div className="space-y-3">
             {stats.categoryStats.slice(0, 5).map((category, index) => {

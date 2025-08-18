@@ -149,6 +149,8 @@ echo -e "${GREEN}Instalando dependencias del backend...${NC}"
 cd "$APP_DIR/server"
 npm install --production || { echo -e "${RED}Error en npm install --production (backend)${NC}"; exit 1; }
 echo -e "${GREEN}Dependencias del backend instaladas.${NC}"
+# Copiar .env del backend a la raíz del proyecto para PM2
+cp "$APP_DIR/server/.env" "$APP_DIR/.env"
 
 # Crear carpeta de logs y asignar permisos correctos (antes del build frontend)
 sudo mkdir -p /var/log/gastos-robert

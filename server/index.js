@@ -22,6 +22,8 @@ const currencyRoutes = require('./routes/currencies');
 const reportRoutes = require('./routes/reports');
 
 const app = express();
+// Permitir que Express confíe en el proxy (Nginx) para X-Forwarded-For
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // Middleware de seguridad
@@ -72,15 +74,27 @@ const corsOptions = {
   origin: (origin, callback) => {
     // Permitir requests sin origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
-    
-    const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean)
-      : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001'];
-    
+    // Permitir el origen del frontend en producción
+    const defaultDevOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001'];
+    let allowedOrigins = defaultDevOrigins;
+    if (process.env.NODE_ENV === 'production') {
+      if (process.env.ALLOWED_ORIGINS && process.env.ALLOWED_ORIGINS.trim() !== '') {
+        allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean);
+      } else {
+        // Detectar IP pública y permitirla automáticamente
+        const publicIp = process.env.PUBLIC_IP || null;
+        if (publicIp) {
+          allowedOrigins = [`http://${publicIp}`];
+        }
+      }
+    }
+    // Mostrar orígenes permitidos en consola para depuración
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`[CORS] Orígenes permitidos:`, allowedOrigins);
+    }
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    
     console.warn(`CORS bloqueó petición desde origen: ${origin}`);
     callback(new Error('No permitido por CORS'));
   },
