@@ -26,7 +26,7 @@ class PDFService {
       // Get user info
       db.get('SELECT * FROM users WHERE id = ?', [userId], async (err, user) => {
         if (err || !user) {
-          reject(new Error('User not found'));
+          reject(new Error('Usuario no encontrado'));
           return;
         }
 

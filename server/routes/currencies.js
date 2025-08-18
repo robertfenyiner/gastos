@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/', authMiddleware, (req, res) => {
   db.all('SELECT * FROM currencies ORDER BY code ASC', (err, currencies) => {
     if (err) {
-      return res.status(500).json({ message: 'Database error' });
+      return res.status(500).json({ message: 'Error de base de datos' });
     }
 
     res.json(currencies);
@@ -21,13 +21,13 @@ router.get('/', authMiddleware, (req, res) => {
 router.post('/update-rates', authMiddleware, async (req, res) => {
   try {
     await currencyService.updateExchangeRates();
-    res.json({ 
-      message: 'Exchange rates update triggered successfully',
+    res.json({
+      message: 'Actualización de tasas de cambio iniciada correctamente',
       updatedAt: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error updating exchange rates. Please try again later.',
+    res.status(500).json({
+      message: 'Error al actualizar las tasas de cambio. Por favor intenta de nuevo más tarde.',
       error: error.message
     });
   }
@@ -39,8 +39,8 @@ router.post('/convert', authMiddleware, async (req, res) => {
     const { amount, fromCurrency, toCurrency } = req.body;
 
     if (!amount || !fromCurrency || !toCurrency) {
-      return res.status(400).json({ 
-        message: 'Amount, fromCurrency, and toCurrency are required' 
+      return res.status(400).json({
+        message: 'Se requieren monto, moneda origen y moneda destino'
       });
     }
 
@@ -71,7 +71,7 @@ router.get('/stats', authMiddleware, (req, res) => {
 
   db.all(query, [userId], (err, stats) => {
     if (err) {
-      return res.status(500).json({ message: 'Database error' });
+      return res.status(500).json({ message: 'Error de base de datos' });
     }
 
     res.json(stats);

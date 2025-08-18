@@ -30,7 +30,7 @@ const Register: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     if (data.password !== data.confirmPassword) {
-      setError('confirmPassword', { message: 'Passwords do not match' });
+      setError('confirmPassword', { message: 'Las contraseñas no coinciden' });
       return;
     }
 
@@ -79,18 +79,18 @@ const Register: React.FC = () => {
               </label>
               <input
                 {...register('username', {
-                  required: 'Username is required',
+                  required: 'El nombre de usuario es obligatorio',
                   minLength: {
                     value: 3,
-                    message: 'Username must be at least 3 characters'
+                    message: 'El nombre de usuario debe tener al menos 3 caracteres'
                   },
                   maxLength: {
                     value: 30,
-                    message: 'Username must be less than 30 characters'
+                    message: 'El nombre de usuario debe tener menos de 30 caracteres'
                   },
                   pattern: {
                     value: /^[a-zA-Z0-9_-]+$/,
-                    message: 'Username can only contain letters, numbers, underscores, and hyphens'
+                    message: 'El nombre de usuario solo puede contener letras, números, guiones y guiones bajos'
                   }
                 })}
                 type="text"
@@ -108,14 +108,14 @@ const Register: React.FC = () => {
               </label>
               <input
                 {...register('email', {
-                  required: 'Email is required',
+                  required: 'El correo electrónico es obligatorio',
                   pattern: {
                     value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                    message: 'Please enter a valid email address'
+                    message: 'Por favor ingresa un correo electrónico válido'
                   },
                   maxLength: {
                     value: 254,
-                    message: 'Email is too long'
+                    message: 'El correo electrónico es demasiado largo'
                   }
                 })}
                 type="email"
@@ -134,18 +134,18 @@ const Register: React.FC = () => {
               <div className="relative mt-1">
                 <input
                   {...register('password', {
-                    required: 'Password is required',
+                    required: 'La contraseña es obligatoria',
                     minLength: {
                       value: 8,
-                      message: 'Password must be at least 8 characters'
+                      message: 'La contraseña debe tener al menos 8 caracteres'
                     },
                     maxLength: {
                       value: 128,
-                      message: 'Password is too long'
+                      message: 'La contraseña es demasiado larga'
                     },
                     pattern: {
                       value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-                      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+                      message: 'La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial'
                     }
                   })}
                   type={showPassword ? 'text' : 'password'}
@@ -176,8 +176,8 @@ const Register: React.FC = () => {
               <div className="relative mt-1">
                 <input
                   {...register('confirmPassword', {
-                    required: 'Please confirm your password',
-                    validate: (value) => value === password || 'Passwords do not match'
+                    required: 'Por favor confirma tu contraseña',
+                    validate: (value) => value === password || 'Las contraseñas no coinciden'
                   })}
                   type={showConfirmPassword ? 'text' : 'password'}
                   className="input-field pr-10"

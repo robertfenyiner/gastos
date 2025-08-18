@@ -46,7 +46,7 @@ router.get('/', authMiddleware, (req, res) => {
 
   db.all(query, params, (err, expenses) => {
     if (err) {
-      return res.status(500).json({ message: 'Database error' });
+      return res.status(500).json({ message: 'Error de base de datos' });
     }
 
     // Get total count
@@ -75,7 +75,7 @@ router.get('/', authMiddleware, (req, res) => {
 
     db.get(countQuery, countParams, (err, countResult) => {
       if (err) {
-        return res.status(500).json({ message: 'Database error' });
+        return res.status(500).json({ message: 'Error de base de datos' });
       }
 
       res.json({
@@ -104,11 +104,11 @@ router.get('/:id', authMiddleware, (req, res) => {
 
   db.get(query, [expenseId, userId], (err, expense) => {
     if (err) {
-      return res.status(500).json({ message: 'Database error' });
+      return res.status(500).json({ message: 'Error de base de datos' });
     }
 
     if (!expense) {
-      return res.status(404).json({ message: 'Expense not found' });
+      return res.status(404).json({ message: 'Gasto no encontrado' });
     }
 
     res.json(expense);
@@ -134,11 +134,11 @@ router.post('/', authMiddleware, (req, res) => {
   const resolvedCurrencyId = currencyId || currency_id;
 
   if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
-    return res.status(400).json({ message: 'All required fields must be provided' });
+    return res.status(400).json({ message: 'Todos los campos obligatorios deben proporcionarse' });
   }
 
   if (amount <= 0) {
-    return res.status(400).json({ message: 'Amount must be greater than 0' });
+    return res.status(400).json({ message: 'El monto debe ser mayor a 0' });
   }
 
   // Calculate next due date for recurring expenses
@@ -172,7 +172,7 @@ router.post('/', authMiddleware, (req, res) => {
     isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0]
   ], function(err) {
     if (err) {
-      return res.status(500).json({ message: 'Error creating expense' });
+      return res.status(500).json({ message: 'Error al crear el gasto' });
     }
 
     // Get the created expense with joined data
@@ -185,16 +185,16 @@ router.post('/', authMiddleware, (req, res) => {
       WHERE e.id = ?
     `;
 
-    db.get(selectQuery, [this.lastID], (err, expense) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error retrieving created expense' });
-      }
+      db.get(selectQuery, [this.lastID], (err, expense) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error al obtener el gasto creado' });
+        }
 
-      res.status(201).json({
-        message: 'Expense created successfully',
-        expense
+        res.status(201).json({
+          message: 'Gasto creado correctamente',
+          expense
+        });
       });
-    });
   });
 });
 
@@ -218,11 +218,11 @@ router.put('/:id', authMiddleware, (req, res) => {
   const resolvedCurrencyId = currencyId || currency_id;
 
   if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
-    return res.status(400).json({ message: 'All required fields must be provided' });
+    return res.status(400).json({ message: 'Todos los campos obligatorios deben proporcionarse' });
   }
 
   if (amount <= 0) {
-    return res.status(400).json({ message: 'Amount must be greater than 0' });
+    return res.status(400).json({ message: 'El monto debe ser mayor a 0' });
   }
 
   // Calculate next due date for recurring expenses
@@ -258,11 +258,11 @@ router.put('/:id', authMiddleware, (req, res) => {
     expenseId, userId
   ], function(err) {
     if (err) {
-      return res.status(500).json({ message: 'Error updating expense' });
+      return res.status(500).json({ message: 'Error al actualizar el gasto' });
     }
 
     if (this.changes === 0) {
-      return res.status(404).json({ message: 'Expense not found' });
+      return res.status(404).json({ message: 'Gasto no encontrado' });
     }
 
     // Get the updated expense with joined data
@@ -275,16 +275,16 @@ router.put('/:id', authMiddleware, (req, res) => {
       WHERE e.id = ?
     `;
 
-    db.get(selectQuery, [expenseId], (err, expense) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error retrieving updated expense' });
-      }
+      db.get(selectQuery, [expenseId], (err, expense) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error al obtener el gasto actualizado' });
+        }
 
-      res.json({
-        message: 'Expense updated successfully',
-        expense
+        res.json({
+          message: 'Gasto actualizado correctamente',
+          expense
+        });
       });
-    });
   });
 });
 
@@ -295,14 +295,14 @@ router.delete('/:id', authMiddleware, (req, res) => {
 
   db.run('DELETE FROM expenses WHERE id = ? AND user_id = ?', [expenseId, userId], function(err) {
     if (err) {
-      return res.status(500).json({ message: 'Error deleting expense' });
+      return res.status(500).json({ message: 'Error al eliminar el gasto' });
     }
 
     if (this.changes === 0) {
-      return res.status(404).json({ message: 'Expense not found' });
+      return res.status(404).json({ message: 'Gasto no encontrado' });
     }
 
-    res.json({ message: 'Expense deleted successfully' });
+    res.json({ message: 'Gasto eliminado correctamente' });
   });
 });
 
@@ -340,7 +340,7 @@ router.get('/stats/summary', authMiddleware, (req, res) => {
 
   db.all(query, params, (err, categoryStats) => {
     if (err) {
-      return res.status(500).json({ message: 'Database error' });
+      return res.status(500).json({ message: 'Error de base de datos' });
     }
 
     // Get total summary
@@ -367,7 +367,7 @@ router.get('/stats/summary', authMiddleware, (req, res) => {
 
     db.get(totalQuery, totalParams, (err, totalStats) => {
       if (err) {
-        return res.status(500).json({ message: 'Database error' });
+        return res.status(500).json({ message: 'Error de base de datos' });
       }
 
       res.json({

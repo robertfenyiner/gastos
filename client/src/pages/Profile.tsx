@@ -31,21 +31,21 @@ const Profile: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!profileForm.username.trim()) {
-      newErrors.username = 'Username is required';
+      newErrors.username = 'El nombre de usuario es obligatorio';
     } else if (profileForm.username.trim().length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
+      newErrors.username = 'El nombre de usuario debe tener al menos 3 caracteres';
     } else if (profileForm.username.trim().length > 30) {
-      newErrors.username = 'Username must be less than 30 characters';
+      newErrors.username = 'El nombre de usuario debe tener menos de 30 caracteres';
     } else if (!/^[a-zA-Z0-9_-]+$/.test(profileForm.username.trim())) {
-      newErrors.username = 'Username can only contain letters, numbers, underscores, and hyphens';
+      newErrors.username = 'El nombre de usuario solo puede contener letras, números, guiones y guiones bajos';
     }
 
     if (!profileForm.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'El correo electrónico es obligatorio';
     } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(profileForm.email.trim())) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Por favor ingresa un correo electrónico válido';
     } else if (profileForm.email.length > 254) {
-      newErrors.email = 'Email is too long';
+      newErrors.email = 'El correo electrónico es demasiado largo';
     }
 
     return newErrors;
@@ -55,28 +55,28 @@ const Profile: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!passwordForm.currentPassword) {
-      newErrors.currentPassword = 'Current password is required';
+      newErrors.currentPassword = 'La contraseña actual es obligatoria';
     }
 
     if (!passwordForm.newPassword) {
-      newErrors.newPassword = 'New password is required';
+      newErrors.newPassword = 'La nueva contraseña es obligatoria';
     } else if (passwordForm.newPassword.length < 8) {
-      newErrors.newPassword = 'New password must be at least 8 characters';
+      newErrors.newPassword = 'La nueva contraseña debe tener al menos 8 caracteres';
     } else if (passwordForm.newPassword.length > 128) {
-      newErrors.newPassword = 'New password is too long';
+      newErrors.newPassword = 'La nueva contraseña es demasiado larga';
     } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(passwordForm.newPassword)) {
-      newErrors.newPassword = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
+      newErrors.newPassword = 'La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial';
     }
 
     if (!passwordForm.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your new password';
+      newErrors.confirmPassword = 'Por favor confirma tu nueva contraseña';
     } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
-    if (passwordForm.currentPassword && passwordForm.newPassword && 
+    if (passwordForm.currentPassword && passwordForm.newPassword &&
         passwordForm.currentPassword === passwordForm.newPassword) {
-      newErrors.newPassword = 'New password must be different from current password';
+      newErrors.newPassword = 'La nueva contraseña debe ser diferente a la actual';
     }
 
     return newErrors;
@@ -101,15 +101,15 @@ const Profile: React.FC = () => {
         email: profileForm.email.trim().toLowerCase()
       });
 
-      setSuccessMessage('Profile updated successfully!');
+      setSuccessMessage('Perfil actualizado correctamente');
       
       // Update local user data (this would typically be handled by the auth context)
       // You might want to add an updateUser method to your AuthContext
       
     } catch (error: any) {
-      console.error('Failed to update profile:', error);
-      setErrors({ 
-        profile: error.response?.data?.message || 'Failed to update profile' 
+      console.error('Error al actualizar el perfil:', error);
+      setErrors({
+        profile: error.response?.data?.message || 'Error al actualizar el perfil'
       });
     } finally {
       setLoading(false);
@@ -135,7 +135,7 @@ const Profile: React.FC = () => {
         newPassword: passwordForm.newPassword
       });
 
-      setSuccessMessage('Password changed successfully!');
+      setSuccessMessage('Contraseña cambiada correctamente');
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -143,9 +143,9 @@ const Profile: React.FC = () => {
       });
       
     } catch (error: any) {
-      console.error('Failed to change password:', error);
-      setErrors({ 
-        password: error.response?.data?.message || 'Failed to change password' 
+      console.error('Error al cambiar la contraseña:', error);
+      setErrors({
+        password: error.response?.data?.message || 'Error al cambiar la contraseña'
       });
     } finally {
       setLoading(false);
@@ -198,7 +198,7 @@ const Profile: React.FC = () => {
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username *
+                  Usuario *
                 </label>
                 <input
                   type="text"
@@ -208,7 +208,7 @@ const Profile: React.FC = () => {
                     clearMessages();
                   }}
                   className={`input-field ${errors.username ? 'border-red-300' : ''}`}
-                  placeholder="Enter your username"
+                  placeholder="Ingresa tu usuario"
                   maxLength={30}
                 />
                 {errors.username && (
@@ -218,7 +218,7 @@ const Profile: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
+                  Correo electrónico *
                 </label>
                 <input
                   type="email"
@@ -228,7 +228,7 @@ const Profile: React.FC = () => {
                     clearMessages();
                   }}
                   className={`input-field ${errors.email ? 'border-red-300' : ''}`}
-                  placeholder="Enter your email"
+                  placeholder="Ingresa tu correo electrónico"
                   maxLength={254}
                 />
                 {errors.email && (
@@ -245,14 +245,14 @@ const Profile: React.FC = () => {
                   {loading ? (
                     <>
                       <LoadingSpinner size="sm" />
-                      <span className="ml-2">Updating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FiSave className="w-4 h-4 mr-2" />
-                      Update Profile
-                    </>
-                  )}
+                      <span className="ml-2">Actualizando...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiSave className="w-4 h-4 mr-2" />
+                    Actualizar perfil
+                  </>
+                )}
                 </button>
               </div>
             </form>
@@ -264,7 +264,7 @@ const Profile: React.FC = () => {
           <div className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <FiKey className="w-5 h-5 mr-2" />
-              Change Password
+              Cambiar contraseña
             </h2>
 
             {errors.password && (
@@ -276,7 +276,7 @@ const Profile: React.FC = () => {
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Password *
+                  Contraseña actual *
                 </label>
                 <div className="relative">
                   <input
@@ -287,7 +287,7 @@ const Profile: React.FC = () => {
                       clearMessages();
                     }}
                     className={`input-field pr-10 ${errors.currentPassword ? 'border-red-300' : ''}`}
-                    placeholder="Enter current password"
+                    placeholder="Ingresa la contraseña actual"
                     maxLength={128}
                   />
                   <button
@@ -309,7 +309,7 @@ const Profile: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  New Password *
+                  Nueva contraseña *
                 </label>
                 <div className="relative">
                   <input
@@ -320,7 +320,7 @@ const Profile: React.FC = () => {
                       clearMessages();
                     }}
                     className={`input-field pr-10 ${errors.newPassword ? 'border-red-300' : ''}`}
-                    placeholder="Enter new password"
+                    placeholder="Ingresa la nueva contraseña"
                     maxLength={128}
                   />
                   <button
@@ -342,7 +342,7 @@ const Profile: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm New Password *
+                  Confirmar nueva contraseña *
                 </label>
                 <div className="relative">
                   <input
@@ -353,7 +353,7 @@ const Profile: React.FC = () => {
                       clearMessages();
                     }}
                     className={`input-field pr-10 ${errors.confirmPassword ? 'border-red-300' : ''}`}
-                    placeholder="Confirm new password"
+                    placeholder="Confirma la nueva contraseña"
                     maxLength={128}
                   />
                   <button
@@ -382,24 +382,24 @@ const Profile: React.FC = () => {
                   {loading ? (
                     <>
                       <LoadingSpinner size="sm" />
-                      <span className="ml-2">Changing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FiKey className="w-4 h-4 mr-2" />
-                      Change Password
-                    </>
-                  )}
+                      <span className="ml-2">Cambiando...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiKey className="w-4 h-4 mr-2" />
+                    Cambiar contraseña
+                  </>
+                )}
                 </button>
               </div>
 
               <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
-                <p className="font-medium mb-1">Password requirements:</p>
+                <p className="font-medium mb-1">Requisitos de la contraseña:</p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>At least 8 characters long</li>
-                  <li>Contains uppercase and lowercase letters</li>
-                  <li>Contains at least one number</li>
-                  <li>Contains at least one special character</li>
+                  <li>Al menos 8 caracteres</li>
+                  <li>Contiene letras mayúsculas y minúsculas</li>
+                  <li>Contiene al menos un número</li>
+                  <li>Contiene al menos un carácter especial</li>
                 </ul>
               </div>
             </form>
@@ -410,16 +410,16 @@ const Profile: React.FC = () => {
       {/* Account Information */}
       <div className="bg-white shadow-sm rounded-lg border">
         <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Account Information</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Información de la cuenta</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Account Created</label>
+              <label className="block text-sm font-medium text-gray-700">Cuenta creada</label>
               <p className="mt-1 text-sm text-gray-900">
                 {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Last Updated</label>
+              <label className="block text-sm font-medium text-gray-700">Última actualización</label>
               <p className="mt-1 text-sm text-gray-900">
                 {user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'N/A'}
               </p>

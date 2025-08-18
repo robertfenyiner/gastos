@@ -113,7 +113,7 @@ const Layout: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {navigation.find(item => isCurrentPath(item.href))?.name || 'Dashboard'}
+                  {navigation.find(item => isCurrentPath(item.href))?.name || 'Panel'}
                 </h2>
               </div>
             </div>

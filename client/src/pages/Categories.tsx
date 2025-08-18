@@ -52,7 +52,7 @@ const Categories: React.FC = () => {
       const response = await api.get('/categories');
       setCategories(response.data);
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      console.error('Error al cargar las categorías:', error);
     } finally {
       setLoading(false);
     }
@@ -62,11 +62,11 @@ const Categories: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Category name is required';
+      newErrors.name = 'El nombre de la categoría es obligatorio';
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Category name must be at least 2 characters';
+      newErrors.name = 'El nombre de la categoría debe tener al menos 2 caracteres';
     } else if (formData.name.trim().length > 100) {
-      newErrors.name = 'Category name must be less than 100 characters';
+      newErrors.name = 'El nombre de la categoría debe tener menos de 100 caracteres';
     }
 
     // Check for duplicate names (excluding current category when editing)
@@ -76,15 +76,15 @@ const Categories: React.FC = () => {
     );
 
     if (isDuplicate) {
-      newErrors.name = 'A category with this name already exists';
+      newErrors.name = 'Ya existe una categoría con este nombre';
     }
 
     if (!formData.color || !/^#[0-9A-F]{6}$/i.test(formData.color)) {
-      newErrors.color = 'Please select a valid color';
+      newErrors.color = 'Selecciona un color válido';
     }
 
     if (!formData.icon) {
-      newErrors.icon = 'Please select an icon';
+      newErrors.icon = 'Selecciona un ícono';
     }
 
     setErrors(newErrors);
@@ -116,8 +116,8 @@ const Categories: React.FC = () => {
       resetForm();
       loadCategories();
     } catch (error: any) {
-      console.error('Failed to save category:', error);
-      setErrors({ submit: error.response?.data?.message || 'Failed to save category' });
+      console.error('Error al guardar la categoría:', error);
+      setErrors({ submit: error.response?.data?.message || 'Error al guardar la categoría' });
     }
   };
 
@@ -133,11 +133,11 @@ const Categories: React.FC = () => {
 
   const handleDelete = async (id: number, name: string, expenseCount: number) => {
     if (expenseCount > 0) {
-      alert(`Cannot delete "${name}" because it has ${expenseCount} associated expense(s). Please reassign or delete those expenses first.`);
+      alert(`No se puede eliminar "${name}" porque tiene ${expenseCount} gasto(s) asociado(s). Reasigna o elimina esos gastos primero.`);
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to delete the category "${name}"?`)) {
+    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${name}"?`)) {
       return;
     }
 
@@ -145,8 +145,8 @@ const Categories: React.FC = () => {
       await api.delete(`/categories/${id}`);
       loadCategories();
     } catch (error: any) {
-      console.error('Failed to delete category:', error);
-      alert(error.response?.data?.message || 'Failed to delete category');
+      console.error('Error al eliminar la categoría:', error);
+      alert(error.response?.data?.message || 'Error al eliminar la categoría');
     }
   };
 
@@ -202,8 +202,8 @@ const Categories: React.FC = () => {
         {categories.length === 0 ? (
           <div className="text-center py-12">
             <FiTag className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No categories found</h3>
-            <p className="mt-2 text-gray-500">Get started by creating your first expense category.</p>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">No se encontraron categorías</h3>
+            <p className="mt-2 text-gray-500">Comienza creando tu primera categoría de gastos.</p>
             <button
               onClick={() => {
                 setEditingCategory(null);
@@ -213,7 +213,7 @@ const Categories: React.FC = () => {
               className="btn-primary mt-4"
             >
               <FiPlus className="w-5 h-5 mr-2" />
-              Add Category
+              Agregar categoría
             </button>
           </div>
         ) : (
@@ -237,7 +237,7 @@ const Categories: React.FC = () => {
                           {category.name}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {category.expense_count} expense{category.expense_count !== 1 ? 's' : ''}
+                          {category.expense_count} gasto{category.expense_count !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
@@ -245,14 +245,14 @@ const Categories: React.FC = () => {
                       <button
                         onClick={() => handleEdit(category)}
                         className="text-blue-600 hover:text-blue-900 p-1"
-                        title="Edit category"
+                        title="Editar categoría"
                       >
                         <FiEdit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(category.id, category.name, category.expense_count)}
                         className="text-red-600 hover:text-red-900 p-1"
-                        title="Delete category"
+                        title="Eliminar categoría"
                       >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
@@ -271,7 +271,7 @@ const Categories: React.FC = () => {
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6">
               <h3 className="text-lg font-medium mb-4">
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
+                {editingCategory ? 'Editar categoría' : 'Agregar nueva categoría'}
               </h3>
 
               {errors.submit && (
@@ -283,14 +283,14 @@ const Categories: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category Name *
+                    Nombre de la categoría *
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className={`input-field ${errors.name ? 'border-red-300' : ''}`}
-                    placeholder="Enter category name"
+                    placeholder="Ingresa el nombre de la categoría"
                     maxLength={100}
                   />
                   {errors.name && (
@@ -329,7 +329,7 @@ const Categories: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Icon *
+                    Ícono *
                   </label>
                   <div className="grid grid-cols-6 gap-2">
                     {iconOptions.map((icon) => (
@@ -356,7 +356,7 @@ const Categories: React.FC = () => {
                 {/* Preview */}
                 <div className="border-t pt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preview
+                    Vista previa
                   </label>
                   <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-md">
                     <div
@@ -366,7 +366,7 @@ const Categories: React.FC = () => {
                       {getIconComponent(formData.icon)}
                     </div>
                     <span className="text-sm font-medium text-gray-900">
-                      {formData.name || 'Category Name'}
+                      {formData.name || 'Nombre de la categoría'}
                     </span>
                   </div>
                 </div>
@@ -381,13 +381,13 @@ const Categories: React.FC = () => {
                     }}
                     className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                   >
-                    Cancel
+                    Cancelar
                   </button>
                   <button
                     type="submit"
                     className="flex-1 btn-primary"
                   >
-                    {editingCategory ? 'Update' : 'Create'} Category
+                    {editingCategory ? 'Actualizar' : 'Crear'} categoría
                   </button>
                 </div>
               </form>

@@ -68,14 +68,14 @@ const Login: React.FC = () => {
               </label>
               <input
                 {...register('email', {
-                  required: 'Email is required',
+                  required: 'El correo electrónico es obligatorio',
                   pattern: {
                     value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                    message: 'Please enter a valid email address'
+                    message: 'Por favor ingresa un correo electrónico válido'
                   },
                   maxLength: {
                     value: 254,
-                    message: 'Email is too long'
+                    message: 'El correo electrónico es demasiado largo'
                   }
                 })}
                 type="email"
@@ -94,14 +94,14 @@ const Login: React.FC = () => {
               <div className="relative mt-1">
                 <input
                   {...register('password', {
-                    required: 'Password is required',
+                    required: 'La contraseña es obligatoria',
                     minLength: {
                       value: 8,
-                      message: 'Password must be at least 8 characters'
+                      message: 'La contraseña debe tener al menos 8 caracteres'
                     },
                     maxLength: {
                       value: 128,
-                      message: 'Password is too long'
+                      message: 'La contraseña es demasiado larga'
                     }
                   })}
                   type={showPassword ? 'text' : 'password'}

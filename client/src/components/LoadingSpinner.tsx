@@ -24,7 +24,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
         <div className="text-center">
           {spinner}
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <p className="mt-2 text-gray-600">Cargando...</p>
         </div>
       </div>
     );
