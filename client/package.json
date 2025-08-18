@@ -10,7 +10,11 @@
     "axios": "^0.24.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-  "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1"
+    },
+    "devDependencies": {
+      "ajv": "6.12.6",
+      "ajv-keywords": "3.5.2"
   },
   "scripts": {
     "start": "react-scripts start",

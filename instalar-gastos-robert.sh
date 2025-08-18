@@ -163,9 +163,13 @@ echo -e "${GREEN}Construyendo frontend...${NC}"
 npm run build || { echo -e "${RED}Error en npm run build (frontend)${NC}"; exit 1; }
 echo -e "${GREEN}Frontend construido correctamente.${NC}"
 
-# Asegurar permisos de lectura para Nginx en archivos estáticos
+# Asegurar permisos de lectura para Nginx en archivos estáticos y acceso en toda la ruta
 chmod -R o+rX "$APP_DIR/client/build"
 sudo chown -R "$CURRENT_USER":"$CURRENT_USER" "$APP_DIR/client/build"
+# Permitir acceso de otros (o+x) en toda la ruta para Nginx
+sudo chmod o+x "$USER_HOME"
+sudo chmod o+x "$APP_DIR"
+sudo chmod o+x "$APP_DIR/client"
 
 # 9. Configurar Nginx
 NGINX_CONFIG="/etc/nginx/sites-available/$APP_NAME"
@@ -215,7 +219,15 @@ PUBLIC_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || hostname -I | awk '{p
 
 echo -e "${GREEN}==== Instalación completada ====${NC}"
 echo -e "${YELLOW}Accede a la app en: http://$PUBLIC_IP/${NC}"
+
 echo -e "${YELLOW}API health: http://$PUBLIC_IP:$PORT/api/health${NC}"
+
+# Crear carpeta de logs y asignar permisos correctos
+sudo mkdir -p /var/log/gastos-robert
+sudo chown nina:nina /var/log/gastos-robert
+
+# Reiniciar PM2 para asegurar que los cambios de entorno y logs se apliquen
+pm2 restart gastos-robert-api --update-env
 
 # Motivo por el que el proyecto puede estar en /root:
 # Si ejecutas el instalador como root (por ejemplo, usando 'sudo su -' o 'sudo bash ...'), 
