@@ -63,7 +63,7 @@ module.exports = {
   deploy: {
     production: {
       user: 'ubuntu',
-      host: ['167.234.215.122'],
+    host: ['5.189.146.163'],
       ref: 'origin/main',
       repo: 'https://github.com/robertfenyiner/gastos.git',
       path: '/home/ubuntu/gastos',
