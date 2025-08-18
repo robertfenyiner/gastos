@@ -52,8 +52,8 @@ const Expenses: React.FC = () => {
     amount: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
-    category_id: '',
-    currency_id: '',
+    categoryId: '',
+    currencyId: '',
     is_recurring: false,
     recurring_frequency: 'monthly'
   });
@@ -79,8 +79,8 @@ const Expenses: React.FC = () => {
       setCurrencies(currenciesRes.data);
       
       // Set default currency to first one
-      if (currenciesRes.data.length > 0 && !formData.currency_id) {
-        setFormData(prev => ({ ...prev, currency_id: currenciesRes.data[0].id.toString() }));
+      if (currenciesRes.data.length > 0 && !formData.currencyId) {
+        setFormData(prev => ({ ...prev, currencyId: currenciesRes.data[0].id.toString() }));
       }
     } catch (error) {
       console.error('Failed to load initial data:', error);
@@ -125,12 +125,12 @@ const Expenses: React.FC = () => {
       newErrors.date = 'Date is required';
     }
 
-    if (!formData.category_id) {
-      newErrors.category_id = 'Category is required';
+    if (!formData.categoryId) {
+      newErrors.categoryId = 'Category is required';
     }
 
-    if (!formData.currency_id) {
-      newErrors.currency_id = 'Currency is required';
+    if (!formData.currencyId) {
+      newErrors.currencyId = 'Currency is required';
     }
 
     setErrors(newErrors);
@@ -148,8 +148,8 @@ const Expenses: React.FC = () => {
       const submitData = {
         ...formData,
         amount: parseFloat(formData.amount),
-        category_id: parseInt(formData.category_id),
-        currency_id: parseInt(formData.currency_id)
+        categoryId: parseInt(formData.categoryId),
+        currencyId: parseInt(formData.currencyId)
       };
 
       if (editingExpense) {
@@ -174,8 +174,8 @@ const Expenses: React.FC = () => {
       amount: expense.amount.toString(),
       description: expense.description,
       date: expense.date,
-      category_id: '', // Will be set when categories are loaded
-      currency_id: '', // Will be set when currencies are loaded
+      categoryId: '', // Will be set when categories are loaded
+      currencyId: '', // Will be set when currencies are loaded
       is_recurring: expense.is_recurring,
       recurring_frequency: expense.recurring_frequency || 'monthly'
     });
@@ -200,8 +200,8 @@ const Expenses: React.FC = () => {
       amount: '',
       description: '',
       date: new Date().toISOString().split('T')[0],
-      category_id: '',
-      currency_id: currencies.length > 0 ? currencies[0].id.toString() : '',
+      categoryId: '',
+      currencyId: currencies.length > 0 ? currencies[0].id.toString() : '',
       is_recurring: false,
       recurring_frequency: 'monthly'
     });
@@ -499,9 +499,9 @@ const Expenses: React.FC = () => {
                     Category *
                   </label>
                   <select
-                    value={formData.category_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                    className={`input-field ${errors.category_id ? 'border-red-300' : ''}`}
+                    value={formData.categoryId}
+                    onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
+                    className={`input-field ${errors.categoryId ? 'border-red-300' : ''}`}
                   >
                     <option value="">Select a category</option>
                     {categories.map((category) => (
@@ -510,8 +510,8 @@ const Expenses: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.category_id && (
-                    <p className="mt-1 text-sm text-red-600">{errors.category_id}</p>
+                  {errors.categoryId && (
+                    <p className="mt-1 text-sm text-red-600">{errors.categoryId}</p>
                   )}
                 </div>
 
@@ -520,9 +520,9 @@ const Expenses: React.FC = () => {
                     Currency *
                   </label>
                   <select
-                    value={formData.currency_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, currency_id: e.target.value }))}
-                    className={`input-field ${errors.currency_id ? 'border-red-300' : ''}`}
+                    value={formData.currencyId}
+                    onChange={(e) => setFormData(prev => ({ ...prev, currencyId: e.target.value }))}
+                    className={`input-field ${errors.currencyId ? 'border-red-300' : ''}`}
                   >
                     <option value="">Select a currency</option>
                     {currencies.map((currency) => (
@@ -531,8 +531,8 @@ const Expenses: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.currency_id && (
-                    <p className="mt-1 text-sm text-red-600">{errors.currency_id}</p>
+                  {errors.currencyId && (
+                    <p className="mt-1 text-sm text-red-600">{errors.currencyId}</p>
                   )}
                 </div>
 

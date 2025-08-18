@@ -118,17 +118,22 @@ router.get('/:id', authMiddleware, (req, res) => {
 // Create new expense
 router.post('/', authMiddleware, (req, res) => {
   const userId = req.user.id;
-  const { 
-    categoryId, 
-    currencyId, 
-    amount, 
-    description, 
-    date, 
-    isRecurring = false, 
-    recurringFrequency = null 
+  const {
+    categoryId,
+    currencyId,
+    category_id,
+    currency_id,
+    amount,
+    description,
+    date,
+    isRecurring = false,
+    recurringFrequency = null
   } = req.body;
 
-  if (!categoryId || !currencyId || !amount || !description || !date) {
+  const resolvedCategoryId = categoryId || category_id;
+  const resolvedCurrencyId = currencyId || currency_id;
+
+  if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
     return res.status(400).json({ message: 'All required fields must be provided' });
   }
 
@@ -163,7 +168,7 @@ router.post('/', authMiddleware, (req, res) => {
   `;
 
   db.run(query, [
-    userId, categoryId, currencyId, amount, description, date, 
+    userId, resolvedCategoryId, resolvedCurrencyId, amount, description, date,
     isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0]
   ], function(err) {
     if (err) {
@@ -197,17 +202,22 @@ router.post('/', authMiddleware, (req, res) => {
 router.put('/:id', authMiddleware, (req, res) => {
   const userId = req.user.id;
   const expenseId = req.params.id;
-  const { 
-    categoryId, 
-    currencyId, 
-    amount, 
-    description, 
-    date, 
-    isRecurring, 
-    recurringFrequency 
+  const {
+    categoryId,
+    currencyId,
+    category_id,
+    currency_id,
+    amount,
+    description,
+    date,
+    isRecurring,
+    recurringFrequency
   } = req.body;
 
-  if (!categoryId || !currencyId || !amount || !description || !date) {
+  const resolvedCategoryId = categoryId || category_id;
+  const resolvedCurrencyId = currencyId || currency_id;
+
+  if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
     return res.status(400).json({ message: 'All required fields must be provided' });
   }
 
@@ -243,7 +253,7 @@ router.put('/:id', authMiddleware, (req, res) => {
   `;
 
   db.run(query, [
-    categoryId, currencyId, amount, description, date, 
+    resolvedCategoryId, resolvedCurrencyId, amount, description, date,
     isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0],
     expenseId, userId
   ], function(err) {
