@@ -150,6 +150,10 @@ cd "$APP_DIR/server"
 npm install --production || { echo -e "${RED}Error en npm install --production (backend)${NC}"; exit 1; }
 echo -e "${GREEN}Dependencias del backend instaladas.${NC}"
 
+# Crear carpeta de logs y asignar permisos correctos (antes del build frontend)
+sudo mkdir -p /var/log/gastos-robert
+sudo chown nina:nina /var/log/gastos-robert
+
 echo -e "${GREEN}Instalando dependencias del frontend...${NC}"
 cd "$APP_DIR/client"
 rm -rf node_modules package-lock.json
@@ -222,9 +226,6 @@ echo -e "${YELLOW}Accede a la app en: http://$PUBLIC_IP/${NC}"
 
 echo -e "${YELLOW}API health: http://$PUBLIC_IP:$PORT/api/health${NC}"
 
-# Crear carpeta de logs y asignar permisos correctos
-sudo mkdir -p /var/log/gastos-robert
-sudo chown nina:nina /var/log/gastos-robert
 
 # Reiniciar PM2 para asegurar que los cambios de entorno y logs se apliquen
 pm2 restart gastos-robert-api --update-env
