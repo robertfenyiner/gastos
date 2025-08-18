@@ -9,7 +9,10 @@ if [ "$(whoami)" != "nina" ]; then
   echo -e "\033[1;33msudo usermod -aG sudo nina\033[0m"
   echo -e "\033[1;33mLuego inicia sesión como nina:\033[0m"
   echo -e "\033[1;33msu - nina\033[0m"
-  echo -e "\033[1;33mY ejecuta nuevamente el instalador:\033[0m"
+  echo -e "\033[1;33mSi el instalador está en /root, muévelo a /home/nina antes de ejecutarlo:\033[0m"
+  echo -e "\033[1;33msudo mv /root/instalar-gastos-robert.sh /home/nina/instalar-gastos-robert.sh\033[0m"
+  echo -e "\033[1;33msudo chown nina:nina /home/nina/instalar-gastos-robert.sh\033[0m"
+  echo -e "\033[1;33mLuego ejecuta:\033[0m"
   echo -e "\033[1;33mbash instalar-gastos-robert.sh\033[0m"
   exit 1
 fi

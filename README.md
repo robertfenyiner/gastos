@@ -104,21 +104,34 @@
 Para instalar **Gastos Robert** en tu VPS Ubuntu 22.04 (Oracle Cloud):
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/robertfenyiner/gastos.git
 cd gastos
 
-# 2. Hacer ejecutable el instalador y configurar .env
-chmod +x instalar-gastos-robert.sh
-cp /home/ubuntu/gastos/server/.env.example /home/ubuntu/gastos/server/.env
 
-# 3. Ejecutar instalador automático
-sudo ./instalar-gastos-robert.sh
+
+# 2. Crear usuario recomendado (si no existe)
+sudo adduser nina
+sudo usermod -aG sudo nina
+su - nina
+
+# 3. Hacer ejecutable el instalador y configurar .env
+chmod +x instalar-gastos-robert.sh
+cp ~/gastos/server/.env.example ~/gastos/server/.env
+
+# 4. Ejecutar instalador automático como usuario nina
+bash instalar-gastos-robert.sh
 ```
 
 ### 🎯 ¿Qué hace el instalador automático?
 
 El script `instalar-gastos-robert.sh` realiza automáticamente todos estos pasos:
+
+**Notas importantes del instalador:**
+- Valida que se ejecute como usuario 'nina' y muestra instrucciones para crearlo si no existe.
+- Elimina node_modules y package-lock.json antes de instalar dependencias del frontend.
+- Instala la versión correcta de react-scripts (5.0.1) antes de construir el frontend.
+- Configura Nginx con el bloque /api/ y proxy_pass http://localhost:5000/api/;
+- Recomienda no ejecutar como root y explica cómo evitar errores de permisos.
 
 #### 📦 **Paso 1: Preparación del Sistema**
 - ✅ Actualiza Ubuntu 22.04 a la última versión
@@ -193,11 +206,12 @@ Después de la instalación automática, tendrás:
 
 La aplicación viene **preconfigurada** para la IP **167.234.215.122** con:
 
-- **✅ Email configurado** con registro.lat.team@gmail.com
-- **✅ JWT Secret configurado** 
-- **✅ CORS configurado** para la IP del servidor
-- **✅ Base de datos configurada** (gastos_robert.db)
-- **✅ Entorno de producción** habilitado
+**✅ Email configurado** con registro.lat.team@gmail.com
+**✅ JWT Secret configurado** 
+**✅ CORS configurado** para la IP del servidor
+**✅ Base de datos configurada** (gastos_robert.db)
+**✅ Entorno de producción** habilitado
+**✅ Instalación recomendada en /home/nina/gastos-robert**
 
 **Configuración opcional adicional:**
 
@@ -244,7 +258,7 @@ git clone https://github.com/robertfenyiner/gastos.git
 cd gastos
 
 # Configurar permisos
-sudo chown -R $USER:$USER ~/gastos
+sudo chown -R nina:nina ~/gastos
 ```
 
 ### 3. Instalar Dependencias
@@ -256,7 +270,9 @@ npm install --production
 
 # Instalar y construir cliente
 cd ../client
+rm -rf node_modules package-lock.json
 npm install
+npm install react-scripts@5.0.1 --save
 npm run build
 ```
 
@@ -280,8 +296,36 @@ pm2 save
 pm2 startup
 
 # Configurar Nginx
-sudo cp config/nginx/expense-tracker /etc/nginx/sites-available/gastos-robert
-sudo ln -s /etc/nginx/sites-available/gastos-robert /etc/nginx/sites-enabled/
+sudo tee /etc/nginx/sites-available/gastos-robert > /dev/null <<EOF
+server {
+  listen 80;
+  server_name _;
+  root /home/nina/gastos-robert/client/build;
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+  location /api/ {
+    proxy_pass http://localhost:5000/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+    proxy_read_timeout 300s;
+    proxy_connect_timeout 75s;
+  }
+  location ~ /\. {
+    deny all;
+    access_log off;
+    log_not_found off;
+  }
+}
+EOF
+sudo ln -sf /etc/nginx/sites-available/gastos-robert /etc/nginx/sites-enabled/gastos-robert
+sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl reload nginx
 ```
