@@ -83,7 +83,7 @@ const Expenses: React.FC = () => {
         setFormData(prev => ({ ...prev, currencyId: currenciesRes.data[0].id.toString() }));
       }
     } catch (error) {
-      console.error('Failed to load initial data:', error);
+      console.error('Error al cargar los datos iniciales:', error);
     }
   };
 
@@ -102,7 +102,7 @@ const Expenses: React.FC = () => {
       setExpenses(response.data.expenses);
       setTotalPages(Math.ceil(response.data.total / 10));
     } catch (error) {
-      console.error('Failed to load expenses:', error);
+      console.error('Error al cargar los gastos:', error);
     } finally {
       setLoading(false);
     }
@@ -112,25 +112,25 @@ const Expenses: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be greater than 0';
+      newErrors.amount = 'El monto debe ser mayor a 0';
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+      newErrors.description = 'La descripción es obligatoria';
     } else if (formData.description.trim().length > 500) {
-      newErrors.description = 'Description must be less than 500 characters';
+      newErrors.description = 'La descripción debe tener menos de 500 caracteres';
     }
 
     if (!formData.date) {
-      newErrors.date = 'Date is required';
+      newErrors.date = 'La fecha es obligatoria';
     }
 
     if (!formData.categoryId) {
-      newErrors.categoryId = 'Category is required';
+      newErrors.categoryId = 'La categoría es obligatoria';
     }
 
     if (!formData.currencyId) {
-      newErrors.currencyId = 'Currency is required';
+      newErrors.currencyId = 'La moneda es obligatoria';
     }
 
     setErrors(newErrors);
@@ -163,8 +163,8 @@ const Expenses: React.FC = () => {
       resetForm();
       loadExpenses();
     } catch (error: any) {
-      console.error('Failed to save expense:', error);
-      setErrors({ submit: error.response?.data?.message || 'Failed to save expense' });
+      console.error('Error al guardar el gasto:', error);
+      setErrors({ submit: error.response?.data?.message || 'Error al guardar el gasto' });
     }
   };
 
@@ -183,7 +183,7 @@ const Expenses: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this expense?')) {
+    if (!window.confirm('¿Seguro que deseas eliminar este gasto?')) {
       return;
     }
 
@@ -191,7 +191,7 @@ const Expenses: React.FC = () => {
       await api.delete(`/expenses/${id}`);
       loadExpenses();
     } catch (error) {
-      console.error('Failed to delete expense:', error);
+      console.error('Error al eliminar el gasto:', error);
     }
   };
 
@@ -256,7 +256,7 @@ const Expenses: React.FC = () => {
               }}
               className="input-field"
             >
-              <option value="">All Categories</option>
+              <option value="">Todas las categorías</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.name}>
                   {category.name}
@@ -267,31 +267,31 @@ const Expenses: React.FC = () => {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sort by
+              Ordenar por
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="input-field"
             >
-              <option value="date">Date</option>
-              <option value="amount">Amount</option>
-              <option value="description">Description</option>
-              <option value="category">Category</option>
+              <option value="date">Fecha</option>
+              <option value="amount">Monto</option>
+              <option value="description">Descripción</option>
+              <option value="category">Categoría</option>
             </select>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Order
+              Orden
             </label>
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
               className="input-field"
             >
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
+              <option value="desc">Descendente</option>
+              <option value="asc">Ascendente</option>
             </select>
           </div>
         </div>
@@ -302,8 +302,8 @@ const Expenses: React.FC = () => {
         {expenses.length === 0 ? (
           <div className="text-center py-12">
             <FiDollarSign className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No expenses found</h3>
-            <p className="mt-2 text-gray-500">Get started by adding your first expense.</p>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">No se encontraron gastos</h3>
+            <p className="mt-2 text-gray-500">Comienza agregando tu primer gasto.</p>
             <button
               onClick={() => {
                 setEditingExpense(null);
@@ -313,7 +313,7 @@ const Expenses: React.FC = () => {
               className="btn-primary mt-4"
             >
               <FiPlus className="w-5 h-5 mr-2" />
-              Add Expense
+              Agregar gasto
             </button>
           </div>
         ) : (
@@ -322,22 +322,22 @@ const Expenses: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
+                    Descripción
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
+                    Monto
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
+                    Categoría
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    Fecha
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                    Tipo
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -371,11 +371,11 @@ const Expenses: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {expense.is_recurring ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Recurring
+                          Recurrente
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          One-time
+                          Único
                         </span>
                       )}
                     </td>
@@ -383,14 +383,14 @@ const Expenses: React.FC = () => {
                       <button
                         onClick={() => handleEdit(expense)}
                         className="text-blue-600 hover:text-blue-900 mr-4"
-                        title="Edit expense"
+                        title="Editar gasto"
                       >
                         <FiEdit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(expense.id)}
                         className="text-red-600 hover:text-red-900"
-                        title="Delete expense"
+                        title="Eliminar gasto"
                       >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
@@ -407,7 +407,7 @@ const Expenses: React.FC = () => {
           <div className="px-6 py-4 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Page {currentPage} of {totalPages}
+                Página {currentPage} de {totalPages}
               </div>
               <div className="flex space-x-2">
                 <button
@@ -415,14 +415,14 @@ const Expenses: React.FC = () => {
                   disabled={currentPage === 1}
                   className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  Siguiente
                 </button>
               </div>
             </div>
@@ -436,7 +436,7 @@ const Expenses: React.FC = () => {
           <div className="bg-white rounded-lg max-w-md w-full max-h-screen overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-medium mb-4">
-                {editingExpense ? 'Edit Expense' : 'Add New Expense'}
+                {editingExpense ? 'Editar gasto' : 'Agregar nuevo gasto'}
               </h3>
 
               {errors.submit && (
@@ -448,14 +448,14 @@ const Expenses: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description *
+                    Descripción *
                   </label>
                   <input
                     type="text"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     className={`input-field ${errors.description ? 'border-red-300' : ''}`}
-                    placeholder="Enter expense description"
+                    placeholder="Ingresa la descripción del gasto"
                   />
                   {errors.description && (
                     <p className="mt-1 text-sm text-red-600">{errors.description}</p>
@@ -464,7 +464,7 @@ const Expenses: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount *
+                    Monto *
                   </label>
                   <input
                     type="number"
@@ -481,7 +481,7 @@ const Expenses: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date *
+                    Fecha *
                   </label>
                   <input
                     type="date"
@@ -496,14 +496,14 @@ const Expenses: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category *
+                    Categoría *
                   </label>
                   <select
                     value={formData.categoryId}
                     onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
                     className={`input-field ${errors.categoryId ? 'border-red-300' : ''}`}
                   >
-                    <option value="">Select a category</option>
+                    <option value="">Selecciona una categoría</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
@@ -517,14 +517,14 @@ const Expenses: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Currency *
+                    Moneda *
                   </label>
                   <select
                     value={formData.currencyId}
                     onChange={(e) => setFormData(prev => ({ ...prev, currencyId: e.target.value }))}
                     className={`input-field ${errors.currencyId ? 'border-red-300' : ''}`}
                   >
-                    <option value="">Select a currency</option>
+                    <option value="">Selecciona una moneda</option>
                     {currencies.map((currency) => (
                       <option key={currency.id} value={currency.id}>
                         {currency.code} - {currency.name}
@@ -544,24 +544,24 @@ const Expenses: React.FC = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, is_recurring: e.target.checked }))}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700">Recurring expense</span>
+                    <span className="ml-2 text-sm text-gray-700">Gasto recurrente</span>
                   </label>
                 </div>
 
                 {formData.is_recurring && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Frequency
+                      Frecuencia
                     </label>
                     <select
                       value={formData.recurring_frequency}
                       onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
                       className="input-field"
                     >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
+                      <option value="daily">Diaria</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="monthly">Mensual</option>
+                      <option value="yearly">Anual</option>
                     </select>
                   </div>
                 )}
@@ -576,13 +576,13 @@ const Expenses: React.FC = () => {
                     }}
                     className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                   >
-                    Cancel
+                    Cancelar
                   </button>
                   <button
                     type="submit"
                     className="flex-1 btn-primary"
                   >
-                    {editingExpense ? 'Update' : 'Add'} Expense
+                    {editingExpense ? 'Actualizar' : 'Agregar'} gasto
                   </button>
                 </div>
               </form>

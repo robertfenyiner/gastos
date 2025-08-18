@@ -18,17 +18,17 @@ class CurrencyService {
       this.updateExchangeRates();
     }, 10000);
 
-    console.log('Currency service scheduler initialized');
+    console.log('Programador del servicio de divisas inicializado');
   }
 
   async updateExchangeRates() {
     if (!process.env.EXCHANGE_API_KEY) {
-      console.log('Exchange rate API key not configured, skipping update');
+      console.log('Clave de API de tipo de cambio no configurada, omitiendo actualización');
       return;
     }
 
     try {
-      console.log('Updating exchange rates...');
+      console.log('Actualizando tasas de cambio...');
       
       // Using exchangerate-api.com as primary source
       const response = await axios.get(
@@ -59,14 +59,14 @@ class CurrencyService {
             );
           });
         } catch (error) {
-          console.error(`Error updating rate for ${currencyCode}:`, error);
+          console.error(`Error al actualizar la tasa para ${currencyCode}:`, error);
         }
       }
 
-      console.log(`Exchange rates updated successfully. Updated ${updatedCount} currencies.`);
+      console.log(`Tasas de cambio actualizadas correctamente. ${updatedCount} monedas actualizadas.`);
       
     } catch (error) {
-      console.error('Error updating exchange rates:', error.message);
+      console.error('Error al actualizar las tasas de cambio:', error.message);
       
       // Fallback to fixer.io if primary API fails
       if (process.env.FIXER_API_KEY) {
@@ -77,7 +77,7 @@ class CurrencyService {
 
   async updateExchangeRatesWithFixer() {
     try {
-      console.log('Trying fallback exchange rate service...');
+      console.log('Intentando servicio alternativo de tasas de cambio...');
       
       const response = await axios.get(
         `http://data.fixer.io/api/latest?access_key=${process.env.FIXER_API_KEY}&base=USD`,
@@ -85,7 +85,7 @@ class CurrencyService {
       );
 
       if (!response.data.success) {
-        throw new Error('Fixer.io API returned error');
+        throw new Error('La API de Fixer.io devolvió un error');
       }
 
       const rates = response.data.rates;
@@ -111,14 +111,14 @@ class CurrencyService {
             );
           });
         } catch (error) {
-          console.error(`Error updating rate for ${currencyCode}:`, error);
+          console.error(`Error al actualizar la tasa para ${currencyCode}:`, error);
         }
       }
 
-      console.log(`Fallback exchange rates updated successfully. Updated ${updatedCount} currencies.`);
+      console.log(`Tasas de cambio alternativas actualizadas correctamente. ${updatedCount} monedas actualizadas.`);
       
     } catch (error) {
-      console.error('Fallback exchange rate update also failed:', error.message);
+      console.error('La actualización alternativa de tasas de cambio también falló:', error.message);
     }
   }
 
@@ -141,12 +141,12 @@ class CurrencyService {
         [fromCurrency, toCurrency],
         (err, currencies) => {
           if (err) {
-            reject(new Error('Database error'));
+            reject(new Error('Error de base de datos'));
             return;
           }
 
           if (currencies.length !== 2) {
-            reject(new Error('One or both currencies not found'));
+            reject(new Error('Una o ambas monedas no fueron encontradas'));
             return;
           }
 
@@ -175,12 +175,12 @@ class CurrencyService {
       // Check if currency already exists
       db.get('SELECT id FROM currencies WHERE code = ?', [code], (err, existingCurrency) => {
         if (err) {
-          reject(new Error('Database error'));
+          reject(new Error('Error de base de datos'));
           return;
         }
 
         if (existingCurrency) {
-          reject(new Error('Currency already exists'));
+          reject(new Error('La moneda ya existe'));
           return;
         }
 
@@ -190,14 +190,14 @@ class CurrencyService {
           [code, name, symbol],
           function(err) {
             if (err) {
-              reject(new Error('Error adding currency'));
+              reject(new Error('Error al agregar la moneda'));
               return;
             }
 
             // Get the created currency
             db.get('SELECT * FROM currencies WHERE id = ?', [this.lastID], (err, currency) => {
               if (err) {
-                reject(new Error('Error retrieving created currency'));
+                reject(new Error('Error al obtener la moneda creada'));
                 return;
               }
 
@@ -213,7 +213,7 @@ class CurrencyService {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM currencies ORDER BY code ASC', (err, currencies) => {
         if (err) {
-          reject(new Error('Database error'));
+          reject(new Error('Error de base de datos'));
           return;
         }
 
@@ -240,7 +240,7 @@ class CurrencyService {
 
       db.all(query, [userId], (err, stats) => {
         if (err) {
-          reject(new Error('Database error'));
+          reject(new Error('Error de base de datos'));
           return;
         }
 
@@ -258,12 +258,12 @@ class CurrencyService {
         [currencyCode],
         (err, currency) => {
           if (err) {
-            reject(new Error('Database error'));
+            reject(new Error('Error de base de datos'));
             return;
           }
 
           if (!currency) {
-            reject(new Error('Currency not found'));
+            reject(new Error('Moneda no encontrada'));
             return;
           }
 
@@ -295,7 +295,7 @@ class CurrencyService {
 
       db.all(query, [limit], (err, currencies) => {
         if (err) {
-          reject(new Error('Database error'));
+          reject(new Error('Error de base de datos'));
           return;
         }
 

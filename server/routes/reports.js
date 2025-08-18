@@ -31,7 +31,7 @@ router.post('/generate', authMiddleware, async (req, res) => {
     const result = await pdfService.generateExpenseReport(userId, options);
 
     res.json({
-      message: 'Report generated successfully',
+      message: 'Reporte generado correctamente',
       fileName: result.fileName,
       downloadUrl: `/api/reports/download/${result.fileName}`,
       summary: {
@@ -44,9 +44,9 @@ router.post('/generate', authMiddleware, async (req, res) => {
 
   } catch (error) {
     console.error('Error generating report:', error);
-    res.status(500).json({ 
-      message: 'Error generating report', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error al generar el reporte',
+      error: error.message
     });
   }
 });
@@ -58,19 +58,19 @@ router.get('/download/:fileName', authMiddleware, (req, res) => {
     
     // Validate filename to prevent directory traversal
     if (!fileName.match(/^expense-report-\d+-\d+\.pdf$/)) {
-      return res.status(400).json({ message: 'Invalid filename' });
+      return res.status(400).json({ message: 'Nombre de archivo inválido' });
     }
 
     const filePath = path.join(__dirname, '../reports', fileName);
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'Report not found' });
+      return res.status(404).json({ message: 'Reporte no encontrado' });
     }
 
     // Check if user owns this report (extract user ID from filename)
     const fileUserId = fileName.split('-')[2];
     if (fileUserId !== req.user.id.toString()) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Acceso denegado' });
     }
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -82,15 +82,15 @@ router.get('/download/:fileName', authMiddleware, (req, res) => {
     fileStream.on('error', (error) => {
       console.error('Error streaming file:', error);
       if (!res.headersSent) {
-        res.status(500).json({ message: 'Error downloading report' });
+        res.status(500).json({ message: 'Error al descargar el reporte' });
       }
     });
 
   } catch (error) {
     console.error('Error downloading report:', error);
-    res.status(500).json({ 
-      message: 'Error downloading report', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error al descargar el reporte',
+      error: error.message
     });
   }
 });
@@ -101,28 +101,28 @@ router.get('/formats', authMiddleware, (req, res) => {
     formats: [
       {
         value: 'weekly',
-        label: 'Weekly Report',
-        description: 'Last 7 days of expenses'
+        label: 'Reporte semanal',
+        description: 'Últimos 7 días de gastos'
       },
       {
         value: 'monthly',
-        label: 'Monthly Report',
-        description: 'Current or selected month'
+        label: 'Reporte mensual',
+        description: 'Mes actual o seleccionado'
       },
       {
         value: 'quarterly',
-        label: 'Quarterly Report',
-        description: 'Last 3 months of expenses'
+        label: 'Reporte trimestral',
+        description: 'Últimos 3 meses de gastos'
       },
       {
         value: 'yearly',
-        label: 'Yearly Report',
-        description: 'Current or selected year'
+        label: 'Reporte anual',
+        description: 'Año actual o seleccionado'
       },
       {
         value: 'custom',
-        label: 'Custom Range',
-        description: 'Specify start and end dates'
+        label: 'Rango personalizado',
+        description: 'Especifica fecha de inicio y fin'
       }
     ]
   });
@@ -137,32 +137,32 @@ router.get('/templates', authMiddleware, (req, res) => {
   res.json({
     templates: [
       {
-        name: 'This Week',
+        name: 'Esta semana',
         startDate: new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0]
       },
       {
-        name: 'Last Week',
+        name: 'Semana pasada',
         startDate: new Date(now.setDate(now.getDate() - now.getDay() - 7)).toISOString().split('T')[0],
         endDate: new Date(now.setDate(now.getDate() - now.getDay() - 1)).toISOString().split('T')[0]
       },
       {
-        name: 'This Month',
+        name: 'Este mes',
         startDate: new Date(currentYear, currentMonth, 1).toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0]
       },
       {
-        name: 'Last Month',
+        name: 'Mes pasado',
         startDate: new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0],
         endDate: new Date(currentYear, currentMonth, 0).toISOString().split('T')[0]
       },
       {
-        name: 'This Year',
+        name: 'Este año',
         startDate: new Date(currentYear, 0, 1).toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0]
       },
       {
-        name: 'Last Year',
+        name: 'Año pasado',
         startDate: new Date(currentYear - 1, 0, 1).toISOString().split('T')[0],
         endDate: new Date(currentYear - 1, 11, 31).toISOString().split('T')[0]
       }
@@ -176,14 +176,14 @@ router.delete('/cleanup', authMiddleware, async (req, res) => {
     const { maxAgeHours = 24 } = req.body;
     await pdfService.cleanupOldReports(maxAgeHours);
     
-    res.json({ 
-      message: 'Old reports cleaned up successfully' 
+    res.json({
+      message: 'Reportes antiguos eliminados correctamente'
     });
   } catch (error) {
     console.error('Error cleaning up reports:', error);
-    res.status(500).json({ 
-      message: 'Error cleaning up reports', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error al eliminar reportes',
+      error: error.message
     });
   }
 });

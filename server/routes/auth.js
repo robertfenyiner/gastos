@@ -12,21 +12,21 @@ router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
     // Check if user already exists
     db.get('SELECT id FROM users WHERE email = ? OR username = ?', [email, username], async (err, existingUser) => {
       if (err) {
-        return res.status(500).json({ message: 'Database error' });
+        return res.status(500).json({ message: 'Error de base de datos' });
       }
 
       if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
+        return res.status(400).json({ message: 'El usuario ya existe' });
       }
 
       // Hash password
@@ -39,20 +39,20 @@ router.post('/register', async (req, res) => {
         [username, email, passwordHash],
         function(err) {
           if (err) {
-            return res.status(500).json({ message: 'Error creating user' });
+            return res.status(500).json({ message: 'Error al crear el usuario' });
           }
 
           const userId = this.lastID;
 
           // Create default categories for new user
           const defaultCategories = [
-            { name: 'Food & Dining', color: '#EF4444', icon: 'utensils' },
-            { name: 'Transportation', color: '#3B82F6', icon: 'car' },
-            { name: 'Shopping', color: '#10B981', icon: 'shopping-bag' },
-            { name: 'Entertainment', color: '#F59E0B', icon: 'film' },
-            { name: 'Bills & Utilities', color: '#8B5CF6', icon: 'receipt' },
-            { name: 'Health & Fitness', color: '#EC4899', icon: 'heart' },
-            { name: 'Subscriptions', color: '#6366F1', icon: 'credit-card' }
+            { name: 'Comida y restaurante', color: '#EF4444', icon: 'utensils' },
+            { name: 'Transporte', color: '#3B82F6', icon: 'car' },
+            { name: 'Compras', color: '#10B981', icon: 'shopping-bag' },
+            { name: 'Entretenimiento', color: '#F59E0B', icon: 'film' },
+            { name: 'Facturas y servicios', color: '#8B5CF6', icon: 'receipt' },
+            { name: 'Salud y fitness', color: '#EC4899', icon: 'heart' },
+            { name: 'Suscripciones', color: '#6366F1', icon: 'credit-card' }
           ];
 
           const insertCategory = db.prepare('INSERT INTO categories (user_id, name, color, icon) VALUES (?, ?, ?, ?)');
@@ -71,7 +71,7 @@ router.post('/register', async (req, res) => {
           );
 
           res.status(201).json({
-            message: 'User created successfully',
+            message: 'Usuario creado correctamente',
             token,
             user: {
               id: userId,
@@ -83,7 +83,7 @@ router.post('/register', async (req, res) => {
       );
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error del servidor' });
   }
 });
 
@@ -93,22 +93,22 @@ router.post('/login', (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
     }
 
     db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
       if (err) {
-        return res.status(500).json({ message: 'Database error' });
+        return res.status(500).json({ message: 'Error de base de datos' });
       }
 
       if (!user) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+        return res.status(400).json({ message: 'Credenciales inválidas' });
       }
 
       const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
       if (!isValidPassword) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+        return res.status(400).json({ message: 'Credenciales inválidas' });
       }
 
       // Generate JWT token
@@ -119,7 +119,7 @@ router.post('/login', (req, res) => {
       );
 
       res.json({
-        message: 'Login successful',
+        message: 'Inicio de sesión exitoso',
         token,
         user: {
           id: user.id,
@@ -129,7 +129,7 @@ router.post('/login', (req, res) => {
       });
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error del servidor' });
   }
 });
 
@@ -147,22 +147,22 @@ router.put('/change-password', authMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: 'Current and new password are required' });
+      return res.status(400).json({ message: 'La contraseña actual y la nueva son obligatorias' });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+      return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 6 caracteres' });
     }
 
     db.get('SELECT password_hash FROM users WHERE id = ?', [userId], async (err, user) => {
       if (err) {
-        return res.status(500).json({ message: 'Database error' });
+        return res.status(500).json({ message: 'Error de base de datos' });
       }
 
       const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
 
       if (!isValidPassword) {
-        return res.status(400).json({ message: 'Current password is incorrect' });
+        return res.status(400).json({ message: 'La contraseña actual es incorrecta' });
       }
 
       const saltRounds = 12;
@@ -172,15 +172,15 @@ router.put('/change-password', authMiddleware, async (req, res) => {
         [newPasswordHash, userId], 
         function(err) {
           if (err) {
-            return res.status(500).json({ message: 'Error updating password' });
+            return res.status(500).json({ message: 'Error al actualizar la contraseña' });
           }
 
-          res.json({ message: 'Password updated successfully' });
+          res.json({ message: 'Contraseña actualizada correctamente' });
         }
       );
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error del servidor' });
   }
 });
 
