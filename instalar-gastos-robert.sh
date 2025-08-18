@@ -124,6 +124,27 @@ fi
 
 sudo chown -R "$CURRENT_USER":"$CURRENT_USER" "$APP_DIR"
 
+# --- Configuración adicional ---
+read -p "Ingresa la IP pública del servidor: " SERVER_IP
+
+# 1) Eliminar duplicados JS en el frontend
+rm -f "$APP_DIR/client/src/App.js" "$APP_DIR/client/src/index.js"
+
+# 2) Ajustar .env (backend y copia en la raíz)
+cd "$APP_DIR/server"
+[ ! -f .env ] && cp .env.example .env
+sed -i "s|ALLOWED_ORIGINS=.*|ALLOWED_ORIGINS=http://$SERVER_IP|" .env
+sed -i "s|APP_URL=.*|APP_URL=http://$SERVER_IP|" .env
+sed -i "s|DB_PATH=.*|DB_PATH=./gastos_robert.db|" .env
+
+cp .env "$APP_DIR/.env"
+sed -i "s|ALLOWED_ORIGINS=.*|ALLOWED_ORIGINS=http://$SERVER_IP|" "$APP_DIR/.env"
+sed -i "s|APP_URL=.*|APP_URL=http://$SERVER_IP|" "$APP_DIR/.env"
+
+# 3) Actualizar IP en ecosystem.config.js
+sed -i "s/host: \\['[^']*'\\]/host: ['$SERVER_IP']/" "$APP_DIR/ecosystem.config.js"
+# --- Fin configuración adicional ---
+
 # 6. Configurar variables de entorno
 cd "$APP_DIR/server"
 if [ ! -f ".env" ]; then
