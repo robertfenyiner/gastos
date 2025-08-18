@@ -98,8 +98,10 @@ if [ "$(pm2 list | grep -c 'online')" -gt 0 ]; then
 fi
 
 # Configurar PM2 arranque automático (no requiere pasos manuales si ejecutas como root o con sudo)
-pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME"
-sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME"
+echo -e "${GREEN}Configurando arranque automático de PM2...${NC}"
+pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME" >/dev/null 2>&1 || true
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME" >/dev/null 2>&1 || true
+echo -e "${GREEN}Arranque automático de PM2 configurado.${NC}"
 
 # 5. Clonar el repositorio (forzar clon limpio y mostrar errores)
 if [ -d "$APP_DIR" ]; then
