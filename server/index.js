@@ -133,7 +133,7 @@ app.use('/api/*', (req, res) => {
 
 // Manejador global de errores
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error global:', err); // <-- log más explícito
   res.status(500).json({ 
     message: 'Algo salió mal!',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor'
