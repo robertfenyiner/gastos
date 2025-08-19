@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 
 // Importar base de datos para inicializar tablas
 require('./database');
@@ -109,6 +110,13 @@ app.use(cors(corsOptions));
 // Middleware de parseo de body
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Static files for attachments
+const uploadPath = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
+app.use('/static', express.static(uploadPath));
 
 // Rutas de la API
 app.use('/api/auth', authRoutes);

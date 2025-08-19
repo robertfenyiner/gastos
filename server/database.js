@@ -80,6 +80,7 @@ db.serialize(() => {
       recurring_frequency VARCHAR(20),
       next_due_date DATE,
       reminder_days_before INTEGER DEFAULT 0,
+      attachment_path TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -88,10 +89,25 @@ db.serialize(() => {
     )
   `);
 
-  // Ensure reminder_days_before column exists for existing databases
-  db.run('ALTER TABLE expenses ADD COLUMN reminder_days_before INTEGER DEFAULT 0', err => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error('Error adding reminder_days_before column:', err.message);
+  // Ensure new columns exist for older databases
+  db.all("PRAGMA table_info(expenses)", (err, columns) => {
+    if (err) {
+      console.error('Error inspeccionando tabla expenses:', err);
+    } else {
+      if (!columns.some(col => col.name === 'attachment_path')) {
+        db.run('ALTER TABLE expenses ADD COLUMN attachment_path TEXT', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando attachment_path:', alterErr);
+          }
+        });
+      }
+      if (!columns.some(col => col.name === 'reminder_days_before')) {
+        db.run('ALTER TABLE expenses ADD COLUMN reminder_days_before INTEGER DEFAULT 0', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando reminder_days_before:', alterErr);
+          }
+        });
+      }
     }
   });
 

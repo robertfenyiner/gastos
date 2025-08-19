@@ -23,6 +23,7 @@ interface Expense {
   currency_code: string;
   currency_symbol: string;
   created_at: string;
+  attachment_path?: string;
 }
 
 interface Category {
@@ -67,6 +68,8 @@ const Expenses: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copEquivalent, setCopEquivalent] = useState('');
   const [exchangeRateCop, setExchangeRateCop] = useState<number | null>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const fileBaseUrl = (api.defaults.baseURL || '').replace('/api', '');
 
   useEffect(() => {
     loadInitialData();
@@ -180,18 +183,25 @@ const Expenses: React.FC = () => {
     }
 
     try {
-      const submitData = {
-        ...formData,
-        amount: parseFloat(formData.amount),
-        categoryId: parseInt(formData.categoryId),
-        currencyId: parseInt(formData.currencyId),
-        reminder_days_before: parseInt(formData.reminder_days_before)
-      };
+      const data = new FormData();
+      data.append('amount', formData.amount);
+      data.append('description', formData.description);
+      data.append('date', formData.date);
+      data.append('categoryId', formData.categoryId);
+      data.append('currencyId', formData.currencyId);
+      data.append('isRecurring', String(formData.is_recurring));
+      data.append('recurringFrequency', formData.recurring_frequency);
+      data.append('reminder_days_before', formData.reminder_days_before);
+      if (attachment) {
+        data.append('attachment', attachment);
+      }
+
+      const config = { headers: { 'Content-Type': 'multipart/form-data' } };
 
       if (editingExpense) {
-        await api.put(`/expenses/${editingExpense.id}`, submitData);
+        await api.put(`/expenses/${editingExpense.id}`, data, config);
       } else {
-        await api.post('/expenses', submitData);
+        await api.post('/expenses', data, config);
       }
 
       setShowModal(false);
@@ -218,6 +228,7 @@ const Expenses: React.FC = () => {
     });
     setCopEquivalent(expense.amount_cop ? expense.amount_cop.toString() : '');
     setExchangeRateCop(expense.exchange_rate_cop || null);
+    setAttachment(null);
     setShowModal(true);
   };
 
@@ -248,6 +259,7 @@ const Expenses: React.FC = () => {
     setErrors({});
     setCopEquivalent('');
     setExchangeRateCop(null);
+    setAttachment(null);
   };
 
   const sanitizeColor = (color: string) => {
@@ -381,6 +393,9 @@ const Expenses: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tipo
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Adjunto
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
@@ -419,20 +434,34 @@ const Expenses: React.FC = () => {
                       {formatDate(expense.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {expense.is_recurring ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Recurrente
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Único
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(expense)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                    {expense.is_recurring ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Recurrente
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        Único
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {expense.attachment_path ? (
+                      <a
+                        href={`${fileBaseUrl}/static/${expense.attachment_path}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        Ver
+                      </a>
+                    ) : (
+                      '-' 
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(expense)}
+                      className="text-blue-600 hover:text-blue-900 mr-4"
                         title="Editar gasto"
                       >
                         <FiEdit className="w-4 h-4" />
@@ -598,6 +627,27 @@ const Expenses: React.FC = () => {
                   />
                   {exchangeRateCop && (
                     <p className="mt-1 text-xs text-gray-500">Tasa: {exchangeRateCop}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Adjunto
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                    className="input-field"
+                  />
+                  {editingExpense && editingExpense.attachment_path && (
+                    <a
+                      href={`${fileBaseUrl}/static/${editingExpense.attachment_path}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 underline mt-1 inline-block"
+                    >
+                      Ver archivo actual
+                    </a>
                   )}
                 </div>
 
