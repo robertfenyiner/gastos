@@ -20,6 +20,7 @@
 - [📊 Uso de la Aplicación](#-uso-de-la-aplicación)
 - [🔐 Seguridad](#-seguridad)
 - [🛠️ Desarrollo](#️-desarrollo)
+- [🔄 Actualizar aplicación](#-actualizar-aplicación)
 - [📈 Monitoreo y Mantenimiento](#-monitoreo-y-mantenimiento)
 - [🐛 Solución de Problemas](#-solución-de-problemas)
 - [🤝 Contribuir](#-contribuir)
@@ -133,6 +134,8 @@ El script `instalar-gastos-robert.sh` realiza automáticamente todos estos pasos
 - Instala la versión correcta de react-scripts (5.0.1) antes de construir el frontend.
 - Configura Nginx con el bloque /api/ y proxy_pass http://localhost:5000/api/;
 - Recomienda no ejecutar como root y explica cómo evitar errores de permisos.
+
+> ⚠️ Este instalador está pensado solo para despliegues iniciales. Para actualizar la aplicación sin perder la base de datos ni la configuración utiliza `./scripts/actualizar-gastos-robert.sh` (ver sección [Actualizar aplicación](#-actualizar-aplicación)).
 
 #### 📦 **Paso 1: Preparación del Sistema**
 - ✅ Actualiza Ubuntu 22.04 a la última versión
@@ -564,6 +567,30 @@ npm run lint
 
 # Build para producción
 npm run build
+```
+
+---
+
+## 🔄 Actualizar aplicación
+
+Antes de actualizar:
+
+- Realiza una copia de seguridad de la base de datos y del archivo `.env`.
+- Cambia al usuario de la aplicación (no `root`).
+
+Para actualizar la aplicación manteniendo la configuración y los datos existentes:
+
+```bash
+./scripts/actualizar-gastos-robert.sh [rama|tag]
+```
+
+Este script preserva la base de datos y la configuración, por lo que el instalador `instalar-gastos-robert.sh` no debe usarse para actualizaciones rutinarias.
+
+Comprueba que todo esté funcionando correctamente:
+
+```bash
+pm2 status
+curl http://localhost:5000/api/health
 ```
 
 ---
