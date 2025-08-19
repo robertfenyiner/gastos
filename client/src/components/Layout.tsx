@@ -27,7 +27,7 @@ const Layout: React.FC = () => {
   const isCurrentPath = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
@@ -37,10 +37,14 @@ const Layout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+          lg:static lg:inset-0 lg:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+        style={{ height: '100vh' }}
+      >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <h1 className="text-lg lg:text-xl font-bold text-gray-900 truncate">Gastos Robert</h1>
           <button
@@ -71,7 +75,7 @@ const Layout: React.FC = () => {
                     <Icon className="w-5 h-5 mr-3" />
                     <span>{item.name}</span>
                   </Link>
-                  </li>
+                </li>
               );
             })}
           </ul>
@@ -96,10 +100,10 @@ const Layout: React.FC = () => {
             <span>Cerrar sesión</span>
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex-1 flex flex-col lg:pl-64">
         {/* Top bar */}
         <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -109,7 +113,6 @@ const Layout: React.FC = () => {
             >
               <FiMenu className="w-6 h-6" />
             </button>
-            
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -117,7 +120,6 @@ const Layout: React.FC = () => {
                 </h2>
               </div>
             </div>
-
             <div className="flex items-center space-x-4 lg:hidden">
               <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                 {user ? getInitials(user.username) : 'U'}
