@@ -38,7 +38,8 @@ db.serialize(() => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       report_emails_enabled BOOLEAN DEFAULT 0,
       payment_cycle VARCHAR(20) DEFAULT 'monthly',
-      reminder_days_before INTEGER DEFAULT 3
+      reminder_days_before INTEGER DEFAULT 3,
+      refresh_token TEXT
     )
   `);
 
@@ -67,6 +68,14 @@ db.serialize(() => {
         db.run('ALTER TABLE users ADD COLUMN reminder_days_before INTEGER DEFAULT 3', alterErr => {
           if (alterErr) {
             console.error('Error agregando reminder_days_before:', alterErr);
+          }
+        });
+      }
+
+      if (!columns.some(col => col.name === 'refresh_token')) {
+        db.run('ALTER TABLE users ADD COLUMN refresh_token TEXT', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando refresh_token:', alterErr);
           }
         });
       }

@@ -42,6 +42,7 @@ const parseUserSafely = (userStr: string): User | null => {
     // Clear corrupted data
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     return null;
   }
 };
@@ -60,6 +61,7 @@ const isValidTokenFormat = (token: string): boolean => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -88,13 +90,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = () => {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
 
       if (storedToken && storedUser) {
         // Validate token format before using it
-        if (!isValidTokenFormat(storedToken)) {
+        if (!isValidTokenFormat(storedToken) || (storedRefreshToken && !isValidTokenFormat(storedRefreshToken))) {
           console.warn('Invalid token format, clearing storage');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          localStorage.removeItem('refreshToken');
           setLoading(false);
           return;
         }
@@ -103,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedUser = parseUserSafely(storedUser);
         if (parsedUser) {
           setToken(storedToken);
+          setRefreshToken(storedRefreshToken);
           setUser(parsedUser);
           verifyToken(storedToken);
         } else {
@@ -119,10 +124,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { email: email.trim(), password });
-      const { token: newToken, user: newUser } = response.data;
+      const { token: newToken, refreshToken: newRefreshToken, user: newUser } = response.data;
 
       // Validate response data
-      if (!newToken || !isValidTokenFormat(newToken) || !newUser) {
+      if (
+        !newToken ||
+        !isValidTokenFormat(newToken) ||
+        !newRefreshToken ||
+        !isValidTokenFormat(newRefreshToken) ||
+        !newUser
+      ) {
         throw new Error('Invalid response from server');
       }
 
@@ -139,9 +150,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setToken(newToken);
+      setRefreshToken(newRefreshToken);
       setUser(sanitizedUser);
 
       localStorage.setItem('token', newToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
       localStorage.setItem('user', JSON.stringify(sanitizedUser));
 
       toast.success('Login successful!');
@@ -154,15 +167,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (username: string, email: string, password: string) => {
     try {
-      const response = await api.post('/auth/register', { 
-        username: username.trim(), 
-        email: email.trim().toLowerCase(), 
-        password 
+      const response = await api.post('/auth/register', {
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        password
       });
-      const { token: newToken, user: newUser } = response.data;
+      const { token: newToken, refreshToken: newRefreshToken, user: newUser } = response.data;
 
       // Validate response data
-      if (!newToken || !isValidTokenFormat(newToken) || !newUser) {
+      if (
+        !newToken ||
+        !isValidTokenFormat(newToken) ||
+        !newRefreshToken ||
+        !isValidTokenFormat(newRefreshToken) ||
+        !newUser
+      ) {
         throw new Error('Invalid response from server');
       }
 
@@ -179,9 +198,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setToken(newToken);
+      setRefreshToken(newRefreshToken);
       setUser(sanitizedUser);
 
       localStorage.setItem('token', newToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
       localStorage.setItem('user', JSON.stringify(sanitizedUser));
 
       toast.success('Registration successful!');
@@ -197,12 +218,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('refreshToken');
     toast.info('Logged out successfully');
+  }, []);
+
+  useEffect(() => {
+    const handleTokenRefresh = () => {
+      const newToken = localStorage.getItem('token');
+      const newRefresh = localStorage.getItem('refreshToken');
+      if (newToken && isValidTokenFormat(newToken)) {
+        setToken(newToken);
+      }
+      if (newRefresh) {
+        setRefreshToken(newRefresh);
+      }
+    };
+    window.addEventListener('tokenRefreshed', handleTokenRefresh);
+    return () => {
+      window.removeEventListener('tokenRefreshed', handleTokenRefresh);
+    };
   }, []);
 
   const value: AuthContextType = {
     user,
     token,
+    refreshToken,
     login,
     register,
     logout,

@@ -63,16 +63,24 @@ router.post('/register', async (req, res) => {
           
           insertCategory.finalize();
 
-          // Generate JWT token
+          // Generate access and refresh tokens
           const token = jwt.sign(
             { userId: userId },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN }
           );
+          const refreshToken = jwt.sign(
+            { userId: userId },
+            process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+          );
+
+          db.run('UPDATE users SET refresh_token = ? WHERE id = ?', [refreshToken, userId]);
 
           res.status(201).json({
             message: 'Usuario creado correctamente',
             token,
+            refreshToken,
             user: {
               id: userId,
               username,
@@ -114,16 +122,24 @@ router.post('/login', (req, res) => {
         return res.status(400).json({ message: 'Credenciales inválidas' });
       }
 
-      // Generate JWT token
+      // Generate access and refresh tokens
       const token = jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
       );
+      const refreshToken = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      );
+
+      db.run('UPDATE users SET refresh_token = ? WHERE id = ?', [refreshToken, user.id]);
 
       res.json({
         message: 'Inicio de sesión exitoso',
         token,
+        refreshToken,
         user: {
           id: user.id,
           username: user.username,
@@ -223,6 +239,58 @@ router.put('/change-password', authMiddleware, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
+// Refresh token
+router.post('/refresh', (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token requerido' });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET
+    );
+
+    db.get(
+      'SELECT id FROM users WHERE id = ? AND refresh_token = ?',
+      [decoded.userId, refreshToken],
+      (err, user) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error de base de datos' });
+        }
+        if (!user) {
+          return res.status(403).json({ message: 'Token inválido' });
+        }
+
+        const token = jwt.sign(
+          { userId: decoded.userId },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+        const newRefreshToken = jwt.sign(
+          { userId: decoded.userId },
+          process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+        );
+
+        db.run(
+          'UPDATE users SET refresh_token = ? WHERE id = ?',
+          [newRefreshToken, decoded.userId],
+          err2 => {
+            if (err2) {
+              return res.status(500).json({ message: 'Error de base de datos' });
+            }
+            res.json({ token, refreshToken: newRefreshToken });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    return res.status(401).json({ message: 'Refresh token inválido' });
   }
 });
 

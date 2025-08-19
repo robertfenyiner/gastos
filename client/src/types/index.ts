@@ -77,6 +77,7 @@ export interface ExpenseStats {
 export interface AuthContextType {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
