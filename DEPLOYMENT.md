@@ -538,6 +538,28 @@ sudo netstat -tulpn | grep :443
 sudo netstat -tulpn | grep :5000
 ```
 
+## 🔄 Actualizar aplicación
+
+Antes de actualizar:
+
+- Realiza una copia de seguridad de la base de datos y del archivo `.env`.
+- Ejecuta los comandos como el usuario de la aplicación (no `root`).
+
+Para actualizar preservando la configuración y los datos existentes utiliza:
+
+```bash
+./scripts/actualizar-gastos-robert.sh [rama|tag]
+```
+
+Este script conserva la base de datos y la configuración. No uses `instalar-gastos-robert.sh` para actualizaciones rutinarias.
+
+Después de actualizar, verifica el estado de la aplicación:
+
+```bash
+pm2 status
+curl http://localhost:5000/api/health
+```
+
 ## 🚨 Solución de Problemas Comunes
 
 ### Problema: La aplicación no inicia
