@@ -33,7 +33,9 @@ const parseUserSafely = (userStr: string): User | null => {
       email: parsed.email.trim().toLowerCase(),
       created_at: parsed.created_at || null,
       updated_at: parsed.updated_at || null,
-      reportEmailsEnabled: !!parsed.reportEmailsEnabled
+      reportEmailsEnabled: !!parsed.reportEmailsEnabled,
+      paymentCycle: ['weekly', 'biweekly', 'monthly'].includes(parsed.paymentCycle) ? parsed.paymentCycle : undefined,
+      reminderDaysBefore: typeof parsed.reminderDaysBefore === 'number' ? parsed.reminderDaysBefore : undefined
     };
   } catch (error) {
     console.error('Failed to parse stored user data:', error);
@@ -131,7 +133,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: newUser.email?.trim().toLowerCase() || '',
         created_at: newUser.created_at || null,
         updated_at: newUser.updated_at || null,
-        reportEmailsEnabled: !!newUser.reportEmailsEnabled
+        reportEmailsEnabled: !!newUser.reportEmailsEnabled,
+        paymentCycle: ['weekly', 'biweekly', 'monthly'].includes(newUser.paymentCycle) ? newUser.paymentCycle : undefined,
+        reminderDaysBefore: typeof newUser.reminderDaysBefore === 'number' ? newUser.reminderDaysBefore : undefined
       };
 
       setToken(newToken);
@@ -169,7 +173,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: newUser.email?.trim().toLowerCase() || '',
         created_at: newUser.created_at || null,
         updated_at: newUser.updated_at || null,
-        reportEmailsEnabled: !!newUser.reportEmailsEnabled
+        reportEmailsEnabled: !!newUser.reportEmailsEnabled,
+        paymentCycle: ['weekly', 'biweekly', 'monthly'].includes(newUser.paymentCycle) ? newUser.paymentCycle : undefined,
+        reminderDaysBefore: typeof newUser.reminderDaysBefore === 'number' ? newUser.reminderDaysBefore : undefined
       };
 
       setToken(newToken);

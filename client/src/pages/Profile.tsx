@@ -15,7 +15,9 @@ const Profile: React.FC = () => {
   const [profileForm, setProfileForm] = useState({
     username: user?.username || '',
     email: user?.email || '',
-    reportEmailsEnabled: user?.reportEmailsEnabled ?? false
+    reportEmailsEnabled: user?.reportEmailsEnabled ?? false,
+    paymentCycle: user?.paymentCycle || 'monthly',
+    reminderDaysBefore: user?.reminderDaysBefore ?? 3
   });
 
   // Password form state
@@ -47,6 +49,14 @@ const Profile: React.FC = () => {
       newErrors.email = 'Por favor ingresa un correo electrónico válido';
     } else if (profileForm.email.length > 254) {
       newErrors.email = 'El correo electrónico es demasiado largo';
+    }
+
+    if (!['weekly', 'biweekly', 'monthly'].includes(profileForm.paymentCycle)) {
+      newErrors.paymentCycle = 'Selecciona un ciclo de pago válido';
+    }
+
+    if (profileForm.reminderDaysBefore < 0) {
+      newErrors.reminderDaysBefore = 'Debe ser un número positivo';
     }
 
     return newErrors;
@@ -100,7 +110,9 @@ const Profile: React.FC = () => {
       const response = await api.put('/auth/profile', {
         username: profileForm.username.trim(),
         email: profileForm.email.trim().toLowerCase(),
-        reportEmailsEnabled: profileForm.reportEmailsEnabled
+        reportEmailsEnabled: profileForm.reportEmailsEnabled,
+        paymentCycle: profileForm.paymentCycle,
+        reminderDaysBefore: profileForm.reminderDaysBefore
       });
 
       setSuccessMessage('Perfil actualizado correctamente');
@@ -251,6 +263,46 @@ const Profile: React.FC = () => {
                 <label className="ml-2 block text-sm text-gray-700">
                   Recibir reportes por correo
                 </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ciclo de pago
+                </label>
+                <select
+                  value={profileForm.paymentCycle}
+                  onChange={(e) => {
+                    setProfileForm(prev => ({ ...prev, paymentCycle: e.target.value }));
+                    clearMessages();
+                  }}
+                  className="input-field"
+                >
+                  <option value="weekly">Semanal</option>
+                  <option value="biweekly">Quincenal</option>
+                  <option value="monthly">Mensual</option>
+                </select>
+                {errors.paymentCycle && (
+                  <p className="mt-1 text-sm text-red-600">{errors.paymentCycle}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Recordatorio (días antes)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={profileForm.reminderDaysBefore}
+                  onChange={(e) => {
+                    setProfileForm(prev => ({ ...prev, reminderDaysBefore: parseInt(e.target.value, 10) || 0 }));
+                    clearMessages();
+                  }}
+                  className={`input-field ${errors.reminderDaysBefore ? 'border-red-300' : ''}`}
+                />
+                {errors.reminderDaysBefore && (
+                  <p className="mt-1 text-sm text-red-600">{errors.reminderDaysBefore}</p>
+                )}
               </div>
 
               <div className="pt-4">

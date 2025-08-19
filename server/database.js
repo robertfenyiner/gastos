@@ -36,7 +36,9 @@ db.serialize(() => {
       password_hash VARCHAR(255) NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      report_emails_enabled BOOLEAN DEFAULT 0
+      report_emails_enabled BOOLEAN DEFAULT 0,
+      payment_cycle VARCHAR(20) DEFAULT 'monthly',
+      reminder_days_before INTEGER DEFAULT 3
     )
   `);
 
@@ -44,12 +46,30 @@ db.serialize(() => {
   db.all("PRAGMA table_info(users)", (err, columns) => {
     if (err) {
       console.error('Error inspeccionando tabla users:', err);
-    } else if (!columns.some(col => col.name === 'report_emails_enabled')) {
-      db.run('ALTER TABLE users ADD COLUMN report_emails_enabled BOOLEAN DEFAULT 0', alterErr => {
-        if (alterErr) {
-          console.error('Error agregando report_emails_enabled:', alterErr);
-        }
-      });
+    } else {
+      if (!columns.some(col => col.name === 'report_emails_enabled')) {
+        db.run('ALTER TABLE users ADD COLUMN report_emails_enabled BOOLEAN DEFAULT 0', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando report_emails_enabled:', alterErr);
+          }
+        });
+      }
+
+      if (!columns.some(col => col.name === 'payment_cycle')) {
+        db.run("ALTER TABLE users ADD COLUMN payment_cycle VARCHAR(20) DEFAULT 'monthly'", alterErr => {
+          if (alterErr) {
+            console.error('Error agregando payment_cycle:', alterErr);
+          }
+        });
+      }
+
+      if (!columns.some(col => col.name === 'reminder_days_before')) {
+        db.run('ALTER TABLE users ADD COLUMN reminder_days_before INTEGER DEFAULT 3', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando reminder_days_before:', alterErr);
+          }
+        });
+      }
     }
   });
 

@@ -229,10 +229,98 @@ class EmailService {
     return this.sendEmail(user.email, subject, html, text);
   }
 
+  async sendRecurringForecast(user, startDate, endDate) {
+    if (!this.transporter) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT e.description, e.amount, e.next_due_date, c.name as category_name, cur.symbol as currency_symbol
+        FROM expenses e
+        JOIN categories c ON e.category_id = c.id
+        JOIN currencies cur ON e.currency_id = cur.id
+        WHERE e.user_id = ? AND e.is_recurring = 1 AND e.next_due_date >= ? AND e.next_due_date <= ?
+        ORDER BY e.next_due_date ASC
+      `;
+
+      db.all(query, [user.id, startDate, endDate], async (err, expenses) => {
+        if (err) {
+          console.error('Error fetching recurring forecast:', err);
+          return reject(err);
+        }
+
+        if (!expenses || expenses.length === 0) {
+          return resolve();
+        }
+
+        const subject = 'Upcoming Recurring Expenses';
+
+        const rows = expenses
+          .map(exp => `<tr><td>${exp.description}</td><td>${exp.category_name}</td><td>${exp.currency_symbol}${exp.amount.toFixed(2)}</td><td>${exp.next_due_date}</td></tr>`)
+          .join('');
+
+        const html = `<!DOCTYPE html><html><body><p>Hola ${user.username},</p><p>Estos son tus gastos recurrentes próximos entre ${startDate} y ${endDate}:</p><table border="1" cellpadding="5" cellspacing="0"><tr><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Próxima fecha</th></tr>${rows}</table></body></html>`;
+
+        const text = `Hola ${user.username},\n\nEstos son tus gastos recurrentes próximos entre ${startDate} y ${endDate}:\n\n${expenses.map(exp => `- ${exp.description} (${exp.category_name}): ${exp.currency_symbol}${exp.amount.toFixed(2)} el ${exp.next_due_date}`).join('\n')}`;
+
+        try {
+          await this.sendEmail(user.email, subject, html, text);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  getNextCycleRange(paymentCycle) {
+    const now = new Date();
+    let start, end;
+
+    switch (paymentCycle) {
+      case 'weekly': {
+        const nextMonday = new Date(now);
+        const day = nextMonday.getDay();
+        const diff = (8 - day) % 7;
+        nextMonday.setDate(nextMonday.getDate() + diff);
+        start = nextMonday;
+        end = new Date(nextMonday);
+        end.setDate(end.getDate() + 6);
+        break;
+      }
+      case 'biweekly': {
+        const nextMonday = new Date(now);
+        const day = nextMonday.getDay();
+        const diff = (8 - day) % 7;
+        nextMonday.setDate(nextMonday.getDate() + diff);
+        start = nextMonday;
+        end = new Date(nextMonday);
+        end.setDate(end.getDate() + 13);
+        break;
+      }
+      default: {
+        start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+        break;
+      }
+    }
+
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0],
+    };
+  }
+
   scheduleReminderChecks() {
     // Check for reminders every day at 9 AM
     cron.schedule('0 9 * * *', () => {
       this.checkAndSendReminders();
+    });
+
+    // Check upcoming recurring expenses for each payment cycle
+    cron.schedule('0 9 * * *', () => {
+      this.checkAndSendRecurringForecasts();
     });
 
     // Send weekly summaries every Sunday at 8 PM
@@ -301,6 +389,41 @@ class EmailService {
       });
     } catch (error) {
       console.error('Error in reminder check:', error);
+    }
+  }
+
+  async checkAndSendRecurringForecasts() {
+    if (!this.transporter) {
+      return;
+    }
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      db.all('SELECT id, username, email, payment_cycle, reminder_days_before FROM users WHERE report_emails_enabled = 1', async (err, users) => {
+        if (err) {
+          console.error('Error fetching users for forecasts:', err);
+          return;
+        }
+
+        for (const user of users) {
+          const { start, end } = this.getNextCycleRange(user.payment_cycle);
+          const reminderDate = new Date(start);
+          reminderDate.setDate(reminderDate.getDate() - (user.reminder_days_before || 0));
+          const reminderStr = reminderDate.toISOString().split('T')[0];
+
+          if (reminderStr === today) {
+            try {
+              await this.sendRecurringForecast(user, start, end);
+              console.log(`Recurring forecast sent to ${user.email}`);
+            } catch (error) {
+              console.error(`Failed to send forecast to ${user.email}:`, error);
+            }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error checking recurring forecasts:', error);
     }
   }
 

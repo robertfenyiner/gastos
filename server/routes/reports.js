@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const authMiddleware = require('../middleware/auth');
 const pdfService = require('../services/pdfService');
+const emailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -50,6 +51,19 @@ router.post('/generate', authMiddleware, async (req, res) => {
       message: 'Error al generar el reporte',
       error: error.message
     });
+  }
+});
+
+// Send recurring expense forecast for next cycle
+router.post('/recurring-forecast', authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+    const { start, end } = emailService.getNextCycleRange(user.paymentCycle);
+    await emailService.sendRecurringForecast(user, start, end);
+    res.json({ message: 'Reporte enviado correctamente' });
+  } catch (error) {
+    console.error('Error sending recurring forecast:', error);
+    res.status(500).json({ message: 'Error al enviar el reporte', error: error.message });
   }
 });
 
