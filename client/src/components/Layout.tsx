@@ -7,7 +7,9 @@ import {
   FiUser, 
   FiMenu, 
   FiX,
-  FiLogOut 
+  FiLogOut,
+  FiFileText,
+  FiSettings
 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { getInitials } from '../utils/format';
@@ -17,12 +19,21 @@ const Layout: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const navigation = [
+  const baseNavigation = [
     { name: 'Inicio', href: '/dashboard', icon: FiHome },
     { name: 'Gastos', href: '/expenses', icon: FiDollarSign },
     { name: 'Categorías', href: '/categories', icon: FiTag },
+    { name: 'Reportes', href: '/reports', icon: FiFileText },
     { name: 'Perfil', href: '/profile', icon: FiUser },
   ];
+
+  const adminNavigation = [
+    { name: 'Administración', href: '/admin', icon: FiSettings },
+  ];
+
+  const navigation = user?.is_admin 
+    ? [...baseNavigation.slice(0, -1), ...adminNavigation, baseNavigation[baseNavigation.length - 1]]
+    : baseNavigation;
 
   const isCurrentPath = (path: string) => location.pathname === path;
 

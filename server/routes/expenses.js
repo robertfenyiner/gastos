@@ -243,7 +243,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // Update expense
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const expenseId = req.params.id;
   const {
@@ -275,38 +275,69 @@ router.put('/:id', authMiddleware, (req, res) => {
     return res.status(400).json({ message: 'Los días de anticipación deben ser entre 1 y 3' });
   }
 
-  // Calculate next due date for recurring expenses
-  let nextDueDate = null;
-  if (isRecurring && recurringFrequency) {
-    const currentDate = new Date(date);
-    switch (recurringFrequency) {
-      case 'daily':
-        nextDueDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
-        break;
-      case 'weekly':
-        nextDueDate = new Date(currentDate.setDate(currentDate.getDate() + 7));
-        break;
-      case 'monthly':
-        nextDueDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
-        break;
-      case 'yearly':
-        nextDueDate = new Date(currentDate.setFullYear(currentDate.getFullYear() + 1));
-        break;
+  try {
+    // Get currency information
+    const currency = await new Promise((resolve, reject) => {
+      db.get('SELECT code FROM currencies WHERE id = ?', [resolvedCurrencyId], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    if (!currency) {
+      return res.status(400).json({ message: 'Moneda no válida' });
     }
-  }
 
-  const query = `
-    UPDATE expenses 
-    SET category_id = ?, currency_id = ?, amount = ?, description = ?, date = ?, 
-        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, reminder_days_advance = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ? AND user_id = ?
-  `;
+    // Convert to COP if not already in COP
+    let copAmount = null;
+    let exchangeRate = null;
+    
+    if (currency.code !== 'COP') {
+      try {
+        const conversion = await currencyService.convertToCOP(amount, currency.code);
+        copAmount = conversion.copAmount;
+        exchangeRate = conversion.exchangeRate;
+      } catch (error) {
+        console.error('Error converting to COP:', error);
+        // Continue without conversion if exchange rate service fails
+      }
+    } else {
+      copAmount = amount;
+      exchangeRate = 1;
+    }
 
-  db.run(query, [
-    resolvedCategoryId, resolvedCurrencyId, amount, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance,
-    expenseId, userId
-  ], function(err) {
+    // Calculate next due date for recurring expenses
+    let nextDueDate = null;
+    if (isRecurring && recurringFrequency) {
+      const currentDate = new Date(date);
+      switch (recurringFrequency) {
+        case 'daily':
+          nextDueDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+          break;
+        case 'weekly':
+          nextDueDate = new Date(currentDate.setDate(currentDate.getDate() + 7));
+          break;
+        case 'monthly':
+          nextDueDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+          break;
+        case 'yearly':
+          nextDueDate = new Date(currentDate.setFullYear(currentDate.getFullYear() + 1));
+          break;
+      }
+    }
+
+    const query = `
+      UPDATE expenses 
+      SET category_id = ?, currency_id = ?, amount = ?, amount_cop = ?, exchange_rate = ?, description = ?, date = ?, 
+          is_recurring = ?, recurring_frequency = ?, next_due_date = ?, reminder_days_advance = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND user_id = ?
+    `;
+
+    db.run(query, [
+      resolvedCategoryId, resolvedCurrencyId, amount, copAmount, exchangeRate, description, date,
+      isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance,
+      expenseId, userId
+    ], function(err) {
     if (err) {
       return res.status(500).json({ message: 'Error al actualizar el gasto' });
     }
@@ -335,7 +366,12 @@ router.put('/:id', authMiddleware, (req, res) => {
           expense
         });
       });
-  });
+    });
+
+  } catch (error) {
+    console.error('Error updating expense:', error);
+    res.status(500).json({ message: 'Error al actualizar el gasto' });
+  }
 });
 
 // Delete expense
