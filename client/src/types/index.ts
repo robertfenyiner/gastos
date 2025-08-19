@@ -4,6 +4,7 @@ export interface User {
   email: string;
   created_at?: string | null;
   updated_at?: string | null;
+  reportEmailsEnabled?: boolean;
 }
 
 export interface Category {

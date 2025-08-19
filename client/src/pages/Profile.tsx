@@ -14,7 +14,8 @@ const Profile: React.FC = () => {
   // Profile form state
   const [profileForm, setProfileForm] = useState({
     username: user?.username || '',
-    email: user?.email || ''
+    email: user?.email || '',
+    reportEmailsEnabled: user?.reportEmailsEnabled ?? false
   });
 
   // Password form state
@@ -98,7 +99,8 @@ const Profile: React.FC = () => {
 
       const response = await api.put('/auth/profile', {
         username: profileForm.username.trim(),
-        email: profileForm.email.trim().toLowerCase()
+        email: profileForm.email.trim().toLowerCase(),
+        reportEmailsEnabled: profileForm.reportEmailsEnabled
       });
 
       setSuccessMessage('Perfil actualizado correctamente');
@@ -234,6 +236,21 @@ const Profile: React.FC = () => {
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                 )}
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={profileForm.reportEmailsEnabled}
+                  onChange={(e) => {
+                    setProfileForm(prev => ({ ...prev, reportEmailsEnabled: e.target.checked }));
+                    clearMessages();
+                  }}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-700">
+                  Recibir reportes por correo
+                </label>
               </div>
 
               <div className="pt-4">

@@ -32,7 +32,8 @@ const parseUserSafely = (userStr: string): User | null => {
       username: parsed.username.trim(),
       email: parsed.email.trim().toLowerCase(),
       created_at: parsed.created_at || null,
-      updated_at: parsed.updated_at || null
+      updated_at: parsed.updated_at || null,
+      reportEmailsEnabled: !!parsed.reportEmailsEnabled
     };
   } catch (error) {
     console.error('Failed to parse stored user data:', error);
@@ -129,7 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: newUser.username?.trim() || '',
         email: newUser.email?.trim().toLowerCase() || '',
         created_at: newUser.created_at || null,
-        updated_at: newUser.updated_at || null
+        updated_at: newUser.updated_at || null,
+        reportEmailsEnabled: !!newUser.reportEmailsEnabled
       };
 
       setToken(newToken);
@@ -166,7 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: newUser.username?.trim() || '',
         email: newUser.email?.trim().toLowerCase() || '',
         created_at: newUser.created_at || null,
-        updated_at: newUser.updated_at || null
+        updated_at: newUser.updated_at || null,
+        reportEmailsEnabled: !!newUser.reportEmailsEnabled
       };
 
       setToken(newToken);

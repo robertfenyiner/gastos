@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
 
       // Insert user
       db.run(
-        'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+        'INSERT INTO users (username, email, password_hash, report_emails_enabled) VALUES (?, ?, ?, 1)',
         [username, email, passwordHash],
         function(err) {
           if (err) {
@@ -76,7 +76,8 @@ router.post('/register', async (req, res) => {
             user: {
               id: userId,
               username,
-              email
+              email,
+              reportEmailsEnabled: true
             }
           });
         }
@@ -124,10 +125,45 @@ router.post('/login', (req, res) => {
         user: {
           id: user.id,
           username: user.username,
-          email: user.email
+          email: user.email,
+          reportEmailsEnabled: !!user.report_emails_enabled
         }
       });
     });
+  } catch (error) {
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
+// Update profile
+router.put('/profile', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { username, email, reportEmailsEnabled } = req.body;
+
+    if (!username || !email) {
+      return res.status(400).json({ message: 'El nombre de usuario y el correo son obligatorios' });
+    }
+
+    db.run(
+      'UPDATE users SET username = ?, email = ?, report_emails_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [username, email, reportEmailsEnabled ? 1 : 0, userId],
+      function(err) {
+        if (err) {
+          return res.status(500).json({ message: 'Error al actualizar el perfil' });
+        }
+
+        res.json({
+          message: 'Perfil actualizado correctamente',
+          user: {
+            id: userId,
+            username,
+            email,
+            reportEmailsEnabled: !!reportEmailsEnabled
+          }
+        });
+      }
+    );
   } catch (error) {
     res.status(500).json({ message: 'Error del servidor' });
   }

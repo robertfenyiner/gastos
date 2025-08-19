@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const db = require('../database');
+const pdfService = require('./pdfService');
 
 class EmailService {
   constructor() {
@@ -35,7 +36,7 @@ class EmailService {
     });
   }
 
-  async sendEmail(to, subject, html, text) {
+  async sendEmail(to, subject, html, text, attachments = []) {
     if (!this.transporter) {
       throw new Error('Email service not configured');
     }
@@ -46,6 +47,7 @@ class EmailService {
       subject,
       html,
       text,
+      attachments,
     };
 
     try {
@@ -238,6 +240,11 @@ class EmailService {
       this.sendWeeklySummaries();
     });
 
+    // Send monthly reports on the first day of the month at 8 PM
+    cron.schedule('0 20 1 * *', () => {
+      this.sendMonthlyReports();
+    });
+
     console.log('Email reminder scheduler initialized');
   }
 
@@ -306,8 +313,8 @@ class EmailService {
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const today = new Date().toISOString().split('T')[0];
 
-      // Get all users
-      db.all('SELECT * FROM users', async (err, users) => {
+      // Get users who have enabled report emails
+      db.all('SELECT * FROM users WHERE report_emails_enabled = 1', async (err, users) => {
         if (err) {
           console.error('Error fetching users:', err);
           return;
@@ -368,6 +375,57 @@ class EmailService {
       });
     } catch (error) {
       console.error('Error in weekly summary:', error);
+    }
+  }
+
+  async sendMonthlyReports() {
+    if (!this.transporter) {
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        .toISOString()
+        .split('T')[0];
+      const endDate = new Date(now.getFullYear(), now.getMonth(), 0)
+        .toISOString()
+        .split('T')[0];
+
+      db.all('SELECT * FROM users WHERE report_emails_enabled = 1', async (err, users) => {
+        if (err) {
+          console.error('Error fetching users:', err);
+          return;
+        }
+
+        for (const user of users) {
+          try {
+            const result = await pdfService.generateExpenseReport(user.id, {
+              startDate,
+              endDate,
+              format: 'monthly',
+            });
+
+            const subject = `Monthly Expense Report`;
+            const html = `Hola ${user.username},<br/>Adjunto encontrarás tu reporte de gastos del último mes.`;
+            const text = `Hola ${user.username}, adjunto encontrarás tu reporte de gastos del último mes.`;
+
+            await this.sendEmail(
+              user.email,
+              subject,
+              html,
+              text,
+              [{ filename: result.fileName, path: result.filePath }]
+            );
+
+            console.log(`Monthly report sent to ${user.email}`);
+          } catch (error) {
+            console.error(`Failed to send monthly report to ${user.email}:`, error);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error in monthly report:', error);
     }
   }
 
