@@ -33,6 +33,8 @@ export interface Expense {
   category_id: number;
   currency_id: number;
   amount: number;
+  amount_cop?: number;
+  exchange_rate?: number;
   description: string;
   date: string;
   is_recurring: boolean;

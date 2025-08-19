@@ -7,9 +7,15 @@ const dbGet = promisify(db.get.bind(db));
 
 const authMiddleware = async (req, res, next) => {
   try {
+    // Log de debug para diagnosticar problemas
+    console.log(`[AUTH] ${req.method} ${req.path} - IP: ${req.ip}`);
+    
     // Extraer y validar token
     const authHeader = req.header('Authorization');
+    console.log(`[AUTH] Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log(`[AUTH] Invalid authorization header format`);
       return res.status(401).json({ message: 'Acceso denegado. Formato de token inválido.' });
     }
 

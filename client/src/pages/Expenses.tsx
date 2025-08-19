@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiCalendar, FiDollarSign, FiTag } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AmountDisplay from '../components/AmountDisplay';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 
 interface Expense {
   id: number;
   amount: number;
+  amount_cop?: number;
+  exchange_rate?: number;
   description: string;
   date: string;
   is_recurring: boolean;
@@ -354,9 +357,14 @@ const Expenses: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {formatCurrency(expense.amount, expense.currency_code)}
-                      </div>
+                      <AmountDisplay
+                        amount={expense.amount}
+                        currencySymbol={expense.currency_symbol}
+                        currencyCode={expense.currency_code}
+                        amountCOP={expense.amount_cop}
+                        exchangeRate={expense.exchange_rate}
+                        className="text-sm"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">

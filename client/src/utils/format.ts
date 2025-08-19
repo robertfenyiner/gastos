@@ -7,6 +7,29 @@ export const formatCurrency = (amount: number, currencySymbol: string): string =
   })}`;
 };
 
+export const formatCOP = (amount: number): string => {
+  return `$${amount.toLocaleString('es-CO', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })} COP`;
+};
+
+export const formatAmountWithCOP = (
+  amount: number, 
+  currencySymbol: string, 
+  currencyCode: string,
+  amountCOP?: number
+): string => {
+  const originalAmount = formatCurrency(amount, currencySymbol);
+  
+  if (currencyCode === 'COP' || !amountCOP) {
+    return originalAmount;
+  }
+  
+  const copAmount = formatCOP(amountCOP);
+  return `${originalAmount} (${copAmount})`;
+};
+
 export const formatDate = (dateString: string): string => {
   try {
     const date = parseISO(dateString);

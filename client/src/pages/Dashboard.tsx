@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiPlus, FiTrendingUp, FiDollarSign, FiCalendar } from 'react-icons/fi';
 import { Expense, ExpenseStats } from '../types';
+import AmountDisplay from '../components/AmountDisplay';
 import api from '../utils/api';
 import { formatCurrency, formatDateShort } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -190,10 +191,15 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {formatCurrency(expense.amount, expense.currency_symbol)}
-                  </p>
-                  <p className="text-xs text-gray-500">{expense.currency_code}</p>
+                  <AmountDisplay
+                    amount={expense.amount}
+                    currencySymbol={expense.currency_symbol}
+                    currencyCode={expense.currency_code}
+                    amountCOP={expense.amount_cop}
+                    exchangeRate={expense.exchange_rate}
+                    className="text-sm"
+                    showCOPInline={false}
+                  />
                 </div>
               </div>
             ))}

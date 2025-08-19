@@ -167,6 +167,19 @@ app.get('/api/clear-rate-limit', (req, res) => {
   });
 });
 
+// Endpoint de debug para verificar autenticación
+app.get('/api/debug/auth', require('./middleware/auth'), (req, res) => {
+  res.json({
+    message: 'Autenticación exitosa',
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+      is_admin: req.user.is_admin
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Servir archivos estáticos de React en producción
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
