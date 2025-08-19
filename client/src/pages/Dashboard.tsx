@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const Dashboard: React.FC = () => {
   const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
   const [stats, setStats] = useState<ExpenseStats | null>(null);
+  const [currencyStats, setCurrencyStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,13 +18,15 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [expensesResponse, statsResponse] = await Promise.all([
+      const [expensesResponse, statsResponse, currencyResponse] = await Promise.all([
         api.get('/expenses?limit=5'),
-        api.get('/expenses/stats/summary')
+        api.get('/expenses/stats/summary'),
+        api.get('/expenses/stats/currency-summary')
       ]);
 
       setRecentExpenses(expensesResponse.data.expenses);
       setStats(statsResponse.data);
+      setCurrencyStats(currencyResponse.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -42,20 +45,21 @@ const Dashboard: React.FC = () => {
   const totalAmount = stats?.totalStats.total_amount || 0;
   const totalExpenses = stats?.totalStats.total_expenses || 0;
   const avgAmount = stats?.totalStats.avg_amount || 0;
+  const totalAmountCOP = currencyStats?.totalStats.total_amount_cop || 0;
 
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card">
           <div className="flex items-center">
             <div className="p-2 bg-primary-100 rounded-lg">
               <FiDollarSign className="w-6 h-6 text-primary-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Gastado</p>
+              <p className="text-sm font-medium text-gray-600">Total en COP</p>
               <p className="text-2xl font-bold text-gray-900">
-                ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                ${totalAmountCOP.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
               </p>
             </div>
           </div>
@@ -73,7 +77,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="card sm:col-span-2 lg:col-span-1">
+        <div className="card">
           <div className="flex items-center">
             <div className="p-2 bg-warning-100 rounded-lg">
               <FiCalendar className="w-6 h-6 text-warning-600" />
@@ -82,6 +86,20 @@ const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-600">Promedio</p>
               <p className="text-2xl font-bold text-gray-900">
                 ${avgAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <FiDollarSign className="w-6 h-6 text-indigo-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Monedas Usadas</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {currencyStats?.currencyStats?.length || 0}
               </p>
             </div>
           </div>
@@ -216,6 +234,57 @@ const Dashboard: React.FC = () => {
                         }}
                       />
                     </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Currency Breakdown */}
+      {currencyStats && currencyStats.currencyStats.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Gastos por moneda</h3>
+            <span className="text-sm text-gray-500">
+              Total equivalente en COP: ${totalAmountCOP.toLocaleString('es-CO')}
+            </span>
+          </div>
+          <div className="space-y-4">
+            {currencyStats.currencyStats.map((currency: any, index: number) => {
+              const percentage = totalAmountCOP > 0 ? (currency.total_amount_cop / totalAmountCOP) * 100 : 0;
+              return (
+                <div key={index} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center">
+                      <span className="text-lg font-medium mr-2">{currency.currency_symbol}</span>
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {currency.currency_name} ({currency.currency_code})
+                        </span>
+                        <div className="text-xs text-gray-500">
+                          {currency.expense_count} gasto{currency.expense_count !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">
+                        {currency.currency_symbol}{currency.total_amount_original?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ≈ ${currency.total_amount_cop?.toLocaleString('es-CO')} COP
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {percentage.toFixed(1)}% del total
                   </div>
                 </div>
               );

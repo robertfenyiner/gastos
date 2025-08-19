@@ -170,6 +170,28 @@ class CurrencyService {
     });
   }
 
+  async convertToCOP(amount, fromCurrency) {
+    if (fromCurrency === 'COP') {
+      return {
+        originalAmount: amount,
+        copAmount: amount,
+        exchangeRate: 1
+      };
+    }
+
+    try {
+      const result = await this.convertCurrency(amount, fromCurrency, 'COP');
+      return {
+        originalAmount: result.originalAmount,
+        copAmount: result.convertedAmount,
+        exchangeRate: result.exchangeRate
+      };
+    } catch (error) {
+      console.error(`Error converting ${fromCurrency} to COP:`, error);
+      throw error;
+    }
+  }
+
   async addCurrency(code, name, symbol) {
     return new Promise((resolve, reject) => {
       // Check if currency already exists
