@@ -15,6 +15,7 @@ interface Expense {
   is_recurring: boolean;
   recurring_frequency?: string;
   next_due_date?: string;
+  reminder_days_before?: number;
   category_id: number;
   category_name: string;
   category_color: string;
@@ -59,7 +60,8 @@ const Expenses: React.FC = () => {
     categoryId: '',
     currencyId: '',
     is_recurring: false,
-    recurring_frequency: 'monthly'
+    recurring_frequency: 'monthly',
+    reminder_days_before: '0'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -182,7 +184,8 @@ const Expenses: React.FC = () => {
         ...formData,
         amount: parseFloat(formData.amount),
         categoryId: parseInt(formData.categoryId),
-        currencyId: parseInt(formData.currencyId)
+        currencyId: parseInt(formData.currencyId),
+        reminder_days_before: parseInt(formData.reminder_days_before)
       };
 
       if (editingExpense) {
@@ -210,7 +213,8 @@ const Expenses: React.FC = () => {
       categoryId: expense.category_id?.toString() || '',
       currencyId: expense.currency_id?.toString() || '',
       is_recurring: expense.is_recurring,
-      recurring_frequency: expense.recurring_frequency || 'monthly'
+      recurring_frequency: expense.recurring_frequency || 'monthly',
+      reminder_days_before: expense.reminder_days_before?.toString() || '0'
     });
     setCopEquivalent(expense.amount_cop ? expense.amount_cop.toString() : '');
     setExchangeRateCop(expense.exchange_rate_cop || null);
@@ -238,7 +242,8 @@ const Expenses: React.FC = () => {
       categoryId: '',
       currencyId: currencies.length > 0 ? currencies[0].id.toString() : '',
       is_recurring: false,
-      recurring_frequency: 'monthly'
+      recurring_frequency: 'monthly',
+      reminder_days_before: '0'
     });
     setErrors({});
     setCopEquivalent('');
@@ -609,20 +614,39 @@ const Expenses: React.FC = () => {
                 </div>
 
                 {formData.is_recurring && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Frecuencia
-                    </label>
-                    <select
-                      value={formData.recurring_frequency}
-                      onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
-                      className="input-field"
-                    >
-                      <option value="daily">Diaria</option>
-                      <option value="weekly">Semanal</option>
-                      <option value="monthly">Mensual</option>
-                      <option value="yearly">Anual</option>
-                    </select>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Frecuencia
+                      </label>
+                      <select
+                        value={formData.recurring_frequency}
+                        onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
+                        className="input-field"
+                      >
+                        <option value="daily">Diaria</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensual</option>
+                        <option value="yearly">Anual</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Recordatorio previo
+                      </label>
+                      <select
+                        value={formData.reminder_days_before}
+                        onChange={(e) => setFormData(prev => ({ ...prev, reminder_days_before: e.target.value }))}
+                        className="input-field"
+                      >
+                        <option value="0">El mismo día</option>
+                        <option value="1">1 día antes</option>
+                        <option value="3">3 días antes</option>
+                        <option value="7">1 semana antes</option>
+                        <option value="14">2 semanas antes</option>
+                        <option value="30">1 mes antes</option>
+                      </select>
+                    </div>
                   </div>
                 )}
 

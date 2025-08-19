@@ -79,6 +79,7 @@ db.serialize(() => {
       is_recurring BOOLEAN DEFAULT FALSE,
       recurring_frequency VARCHAR(20),
       next_due_date DATE,
+      reminder_days_before INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -86,6 +87,13 @@ db.serialize(() => {
       FOREIGN KEY (currency_id) REFERENCES currencies (id) ON DELETE CASCADE
     )
   `);
+
+  // Ensure reminder_days_before column exists for existing databases
+  db.run('ALTER TABLE expenses ADD COLUMN reminder_days_before INTEGER DEFAULT 0', err => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding reminder_days_before column:', err.message);
+    }
+  });
 
   // Tabla de recordatorios de email
   db.run(`
