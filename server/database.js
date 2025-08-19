@@ -72,6 +72,8 @@ db.serialize(() => {
       category_id INTEGER NOT NULL,
       currency_id INTEGER NOT NULL,
       amount DECIMAL(10,2) NOT NULL,
+      amount_cop DECIMAL(10,2),
+      exchange_rate_cop DECIMAL(10,6),
       description TEXT,
       date DATE NOT NULL,
       is_recurring BOOLEAN DEFAULT FALSE,

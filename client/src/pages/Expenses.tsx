@@ -8,13 +8,17 @@ import { formatCurrency, formatDate } from '../utils/format';
 interface Expense {
   id: number;
   amount: number;
+  amount_cop?: number;
+  exchange_rate_cop?: number;
   description: string;
   date: string;
   is_recurring: boolean;
   recurring_frequency?: string;
   next_due_date?: string;
+  category_id: number;
   category_name: string;
   category_color: string;
+  currency_id: number;
   currency_code: string;
   currency_symbol: string;
   created_at: string;
@@ -59,6 +63,8 @@ const Expenses: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [copEquivalent, setCopEquivalent] = useState('');
+  const [exchangeRateCop, setExchangeRateCop] = useState<number | null>(null);
 
   useEffect(() => {
     loadInitialData();
@@ -107,6 +113,33 @@ const Expenses: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const convertToCOP = async () => {
+      if (!formData.amount || !formData.currencyId) {
+        setCopEquivalent('');
+        setExchangeRateCop(null);
+        return;
+      }
+
+      const currency = currencies.find(c => c.id.toString() === formData.currencyId);
+      if (!currency) return;
+
+      try {
+        const res = await api.post('/currencies/convert', {
+          amount: parseFloat(formData.amount),
+          fromCurrency: currency.code,
+          toCurrency: 'COP'
+        });
+        setCopEquivalent(res.data.convertedAmount.toFixed(2));
+        setExchangeRateCop(res.data.exchangeRate);
+      } catch (err) {
+        console.error('Error al convertir moneda:', err);
+      }
+    };
+
+    convertToCOP();
+  }, [formData.amount, formData.currencyId, currencies]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -174,11 +207,13 @@ const Expenses: React.FC = () => {
       amount: expense.amount.toString(),
       description: expense.description,
       date: expense.date,
-      categoryId: '', // Will be set when categories are loaded
-      currencyId: '', // Will be set when currencies are loaded
+      categoryId: expense.category_id?.toString() || '',
+      currencyId: expense.currency_id?.toString() || '',
       is_recurring: expense.is_recurring,
       recurring_frequency: expense.recurring_frequency || 'monthly'
     });
+    setCopEquivalent(expense.amount_cop ? expense.amount_cop.toString() : '');
+    setExchangeRateCop(expense.exchange_rate_cop || null);
     setShowModal(true);
   };
 
@@ -206,6 +241,8 @@ const Expenses: React.FC = () => {
       recurring_frequency: 'monthly'
     });
     setErrors({});
+    setCopEquivalent('');
+    setExchangeRateCop(null);
   };
 
   const sanitizeColor = (color: string) => {
@@ -328,6 +365,9 @@ const Expenses: React.FC = () => {
                     Monto
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Equivalente COP
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Categoría
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -352,6 +392,11 @@ const Expenses: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {formatCurrency(expense.amount, expense.currency_code)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {expense.amount_cop ? formatCurrency(expense.amount_cop, 'COP') : '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -533,6 +578,21 @@ const Expenses: React.FC = () => {
                   </select>
                   {errors.currencyId && (
                     <p className="mt-1 text-sm text-red-600">{errors.currencyId}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Equivalente en COP
+                  </label>
+                  <input
+                    type="text"
+                    value={copEquivalent ? formatCurrency(parseFloat(copEquivalent), 'COP') : ''}
+                    readOnly
+                    className="input-field bg-gray-50"
+                  />
+                  {exchangeRateCop && (
+                    <p className="mt-1 text-xs text-gray-500">Tasa: {exchangeRateCop}</p>
                   )}
                 </div>
 
