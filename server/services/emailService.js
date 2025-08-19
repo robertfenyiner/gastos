@@ -248,26 +248,26 @@ class EmailService {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      // Get recurring expenses due today or tomorrow
+      // Get recurring expenses that should be reminded today
       const query = `
         SELECT e.*, u.username, u.email, c.name as category_name, cur.symbol as currency_symbol
         FROM expenses e
         JOIN users u ON e.user_id = u.id
         JOIN categories c ON e.category_id = c.id
         JOIN currencies cur ON e.currency_id = cur.id
-        WHERE e.is_recurring = 1 
-        AND e.next_due_date IN (?, ?)
+        WHERE e.is_recurring = 1
+        AND e.next_due_date IS NOT NULL
+        AND DATE(e.next_due_date, '-' || IFNULL(e.reminder_days_before, 0) || ' days') = ?
         AND NOT EXISTS (
-          SELECT 1 FROM email_reminders er 
-          WHERE er.expense_id = e.id 
-          AND er.reminder_date = ? 
+          SELECT 1 FROM email_reminders er
+          WHERE er.expense_id = e.id
+          AND er.reminder_date = ?
           AND er.is_sent = 1
         )
       `;
 
-      db.all(query, [today, tomorrow, today], async (err, expenses) => {
+      db.all(query, [today, today], async (err, expenses) => {
         if (err) {
           console.error('Error fetching reminder expenses:', err);
           return;

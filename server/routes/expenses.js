@@ -2,8 +2,24 @@ const express = require('express');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
 const currencyService = require('../services/currencyService');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
+
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
 
 // Get all expenses for user
 router.get('/', authMiddleware, (req, res) => {
@@ -117,7 +133,7 @@ router.get('/:id', authMiddleware, (req, res) => {
 });
 
 // Create new expense
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, upload.single('attachment'), async (req, res) => {
   const userId = req.user.id;
   const {
     categoryId,
@@ -128,11 +144,14 @@ router.post('/', authMiddleware, async (req, res) => {
     description,
     date,
     isRecurring = false,
-    recurringFrequency = null
+    recurringFrequency = null,
+    reminderDaysBefore = 0,
+    reminder_days_before
   } = req.body;
 
   const resolvedCategoryId = categoryId || category_id;
   const resolvedCurrencyId = currencyId || currency_id;
+  const resolvedReminderDaysBefore = reminderDaysBefore || reminder_days_before || 0;
 
   if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
     return res.status(400).json({ message: 'Todos los campos obligatorios deben proporcionarse' });
@@ -184,15 +203,16 @@ router.post('/', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: 'Error al convertir la moneda' });
   }
 
+  const attachmentPath = req.file ? req.file.filename : null;
   const query = `
     INSERT INTO expenses
-    (user_id, category_id, currency_id, amount, amount_cop, exchange_rate_cop, description, date, is_recurring, recurring_frequency, next_due_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (user_id, category_id, currency_id, amount, amount_cop, exchange_rate_cop, description, date, is_recurring, recurring_frequency, next_due_date, reminder_days_before, attachment_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(query, [
     userId, resolvedCategoryId, resolvedCurrencyId, amount, amountCop, exchangeRateCop, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0]
+    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], resolvedReminderDaysBefore, attachmentPath
   ], function(err) {
     if (err) {
       return res.status(500).json({ message: 'Error al crear el gasto' });
@@ -222,7 +242,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // Update expense
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', authMiddleware, upload.single('attachment'), async (req, res) => {
   const userId = req.user.id;
   const expenseId = req.params.id;
   const {
@@ -234,11 +254,14 @@ router.put('/:id', authMiddleware, async (req, res) => {
     description,
     date,
     isRecurring,
-    recurringFrequency
+    recurringFrequency,
+    reminderDaysBefore = 0,
+    reminder_days_before
   } = req.body;
 
   const resolvedCategoryId = categoryId || category_id;
   const resolvedCurrencyId = currencyId || currency_id;
+  const resolvedReminderDaysBefore = reminderDaysBefore || reminder_days_before || 0;
 
   if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
     return res.status(400).json({ message: 'Todos los campos obligatorios deben proporcionarse' });
@@ -290,16 +313,17 @@ router.put('/:id', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: 'Error al convertir la moneda' });
   }
 
+  const attachmentPath = req.file ? req.file.filename : null;
   const query = `
     UPDATE expenses
     SET category_id = ?, currency_id = ?, amount = ?, amount_cop = ?, exchange_rate_cop = ?, description = ?, date = ?,
-        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, updated_at = CURRENT_TIMESTAMP
+        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, reminder_days_before = ?, attachment_path = COALESCE(?, attachment_path), updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND user_id = ?
   `;
 
   db.run(query, [
     resolvedCategoryId, resolvedCurrencyId, amount, amountCop, exchangeRateCop, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0],
+    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], resolvedReminderDaysBefore, attachmentPath,
     expenseId, userId
   ], function(err) {
     if (err) {
