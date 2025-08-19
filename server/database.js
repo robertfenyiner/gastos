@@ -35,9 +35,23 @@ db.serialize(() => {
       email VARCHAR(100) UNIQUE NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      report_emails_enabled BOOLEAN DEFAULT 0
     )
   `);
+
+  // Ensure report_emails_enabled column exists for older databases
+  db.all("PRAGMA table_info(users)", (err, columns) => {
+    if (err) {
+      console.error('Error inspeccionando tabla users:', err);
+    } else if (!columns.some(col => col.name === 'report_emails_enabled')) {
+      db.run('ALTER TABLE users ADD COLUMN report_emails_enabled BOOLEAN DEFAULT 0', alterErr => {
+        if (alterErr) {
+          console.error('Error agregando report_emails_enabled:', alterErr);
+        }
+      });
+    }
+  });
 
   // Tabla de categorías
   db.run(`

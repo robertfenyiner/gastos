@@ -37,7 +37,7 @@ const authMiddleware = async (req, res, next) => {
     // Verificar que el usuario aún exista en la base de datos
     let user;
     try {
-      user = await dbGet('SELECT id, username, email, created_at FROM users WHERE id = ?', [decoded.userId]);
+      user = await dbGet('SELECT id, username, email, created_at, report_emails_enabled FROM users WHERE id = ?', [decoded.userId]);
     } catch (dbError) {
       console.error('Error de base de datos durante autenticación:', dbError);
       return res.status(500).json({ message: 'Servicio de autenticación temporalmente no disponible.' });
@@ -53,7 +53,8 @@ const authMiddleware = async (req, res, next) => {
       id: user.id,
       username: user.username,
       email: user.email,
-      created_at: user.created_at
+      created_at: user.created_at,
+      reportEmailsEnabled: !!user.report_emails_enabled
     };
 
     // Agregar información de token para funcionalidad potencial de logout/blacklist
