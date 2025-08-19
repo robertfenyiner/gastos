@@ -144,11 +144,14 @@ router.post('/', authMiddleware, upload.single('attachment'), async (req, res) =
     description,
     date,
     isRecurring = false,
-    recurringFrequency = null
+    recurringFrequency = null,
+    reminderDaysBefore = 1
   } = req.body;
 
   const resolvedCategoryId = categoryId || category_id;
   const resolvedCurrencyId = currencyId || currency_id;
+
+  const reminderDays = parseInt(reminderDaysBefore);
 
   if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
     return res.status(400).json({ message: 'Todos los campos obligatorios deben proporcionarse' });
@@ -156,6 +159,10 @@ router.post('/', authMiddleware, upload.single('attachment'), async (req, res) =
 
   if (amount <= 0) {
     return res.status(400).json({ message: 'El monto debe ser mayor a 0' });
+  }
+
+  if (reminderDays < 1 || reminderDays > 3) {
+    return res.status(400).json({ message: 'reminderDaysBefore debe estar entre 1 y 3' });
   }
 
   // Calculate next due date for recurring expenses
@@ -203,13 +210,13 @@ router.post('/', authMiddleware, upload.single('attachment'), async (req, res) =
   const attachmentPath = req.file ? req.file.filename : null;
   const query = `
     INSERT INTO expenses
-    (user_id, category_id, currency_id, amount, amount_cop, exchange_rate_cop, description, date, is_recurring, recurring_frequency, next_due_date, attachment_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (user_id, category_id, currency_id, amount, amount_cop, exchange_rate_cop, description, date, is_recurring, recurring_frequency, next_due_date, reminder_days_before, attachment_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(query, [
     userId, resolvedCategoryId, resolvedCurrencyId, amount, amountCop, exchangeRateCop, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], attachmentPath
+    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDays, attachmentPath
   ], function(err) {
     if (err) {
       return res.status(500).json({ message: 'Error al crear el gasto' });
@@ -251,11 +258,13 @@ router.put('/:id', authMiddleware, upload.single('attachment'), async (req, res)
     description,
     date,
     isRecurring,
-    recurringFrequency
+    recurringFrequency,
+    reminderDaysBefore = 1
   } = req.body;
 
   const resolvedCategoryId = categoryId || category_id;
   const resolvedCurrencyId = currencyId || currency_id;
+  const reminderDays = parseInt(reminderDaysBefore);
 
   if (!resolvedCategoryId || !resolvedCurrencyId || !amount || !description || !date) {
     return res.status(400).json({ message: 'Todos los campos obligatorios deben proporcionarse' });
@@ -263,6 +272,10 @@ router.put('/:id', authMiddleware, upload.single('attachment'), async (req, res)
 
   if (amount <= 0) {
     return res.status(400).json({ message: 'El monto debe ser mayor a 0' });
+  }
+
+  if (reminderDays < 1 || reminderDays > 3) {
+    return res.status(400).json({ message: 'reminderDaysBefore debe estar entre 1 y 3' });
   }
 
   // Calculate next due date for recurring expenses
@@ -311,13 +324,13 @@ router.put('/:id', authMiddleware, upload.single('attachment'), async (req, res)
   const query = `
     UPDATE expenses
     SET category_id = ?, currency_id = ?, amount = ?, amount_cop = ?, exchange_rate_cop = ?, description = ?, date = ?,
-        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, attachment_path = COALESCE(?, attachment_path), updated_at = CURRENT_TIMESTAMP
+        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, reminder_days_before = ?, attachment_path = COALESCE(?, attachment_path), updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND user_id = ?
   `;
 
   db.run(query, [
     resolvedCategoryId, resolvedCurrencyId, amount, amountCop, exchangeRateCop, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], attachmentPath,
+    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDays, attachmentPath,
     expenseId, userId
   ], function(err) {
     if (err) {

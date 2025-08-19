@@ -15,6 +15,7 @@ interface Expense {
   is_recurring: boolean;
   recurring_frequency?: string;
   next_due_date?: string;
+  reminder_days_before?: number;
   category_id: number;
   category_name: string;
   category_color: string;
@@ -60,7 +61,8 @@ const Expenses: React.FC = () => {
     categoryId: '',
     currencyId: '',
     is_recurring: false,
-    recurring_frequency: 'monthly'
+    recurring_frequency: 'monthly',
+    reminder_days_before: 1
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -189,6 +191,7 @@ const Expenses: React.FC = () => {
       data.append('currencyId', formData.currencyId);
       data.append('isRecurring', String(formData.is_recurring));
       data.append('recurringFrequency', formData.recurring_frequency);
+      data.append('reminderDaysBefore', formData.reminder_days_before.toString());
       if (attachment) {
         data.append('attachment', attachment);
       }
@@ -220,7 +223,8 @@ const Expenses: React.FC = () => {
       categoryId: expense.category_id?.toString() || '',
       currencyId: expense.currency_id?.toString() || '',
       is_recurring: expense.is_recurring,
-      recurring_frequency: expense.recurring_frequency || 'monthly'
+      recurring_frequency: expense.recurring_frequency || 'monthly',
+      reminder_days_before: expense.reminder_days_before || 1
     });
     setCopEquivalent(expense.amount_cop ? expense.amount_cop.toString() : '');
     setExchangeRateCop(expense.exchange_rate_cop || null);
@@ -249,7 +253,8 @@ const Expenses: React.FC = () => {
       categoryId: '',
       currencyId: currencies.length > 0 ? currencies[0].id.toString() : '',
       is_recurring: false,
-      recurring_frequency: 'monthly'
+      recurring_frequency: 'monthly',
+      reminder_days_before: 1
     });
     setErrors({});
     setCopEquivalent('');
@@ -659,21 +664,38 @@ const Expenses: React.FC = () => {
                 </div>
 
                 {formData.is_recurring && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Frecuencia
-                    </label>
-                    <select
-                      value={formData.recurring_frequency}
-                      onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
-                      className="input-field"
-                    >
-                      <option value="daily">Diaria</option>
-                      <option value="weekly">Semanal</option>
-                      <option value="monthly">Mensual</option>
-                      <option value="yearly">Anual</option>
-                    </select>
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Frecuencia
+                      </label>
+                      <select
+                        value={formData.recurring_frequency}
+                        onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
+                        className="input-field"
+                      >
+                        <option value="daily">Diaria</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensual</option>
+                        <option value="yearly">Anual</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Recordar (días antes)
+                      </label>
+                      <select
+                        value={formData.reminder_days_before}
+                        onChange={(e) => setFormData(prev => ({ ...prev, reminder_days_before: parseInt(e.target.value) }))}
+                        className="input-field"
+                      >
+                        <option value={1}>1</option>
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                      </select>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex space-x-3 pt-4">

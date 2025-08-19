@@ -113,6 +113,7 @@ db.serialize(() => {
       is_recurring BOOLEAN DEFAULT FALSE,
       recurring_frequency VARCHAR(20),
       next_due_date DATE,
+      reminder_days_before INTEGER DEFAULT 1,
       attachment_path TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -122,16 +123,26 @@ db.serialize(() => {
     )
   `);
 
-  // Ensure attachment_path column exists for older databases
+  // Ensure new columns exist for older databases
   db.all("PRAGMA table_info(expenses)", (err, columns) => {
     if (err) {
       console.error('Error inspeccionando tabla expenses:', err);
-    } else if (!columns.some(col => col.name === 'attachment_path')) {
-      db.run('ALTER TABLE expenses ADD COLUMN attachment_path TEXT', alterErr => {
-        if (alterErr) {
-          console.error('Error agregando attachment_path:', alterErr);
-        }
-      });
+    } else {
+      if (!columns.some(col => col.name === 'attachment_path')) {
+        db.run('ALTER TABLE expenses ADD COLUMN attachment_path TEXT', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando attachment_path:', alterErr);
+          }
+        });
+      }
+
+      if (!columns.some(col => col.name === 'reminder_days_before')) {
+        db.run('ALTER TABLE expenses ADD COLUMN reminder_days_before INTEGER DEFAULT 1', alterErr => {
+          if (alterErr) {
+            console.error('Error agregando reminder_days_before:', alterErr);
+          }
+        });
+      }
     }
   });
 
