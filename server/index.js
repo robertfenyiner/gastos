@@ -21,6 +21,7 @@ const expenseRoutes = require('./routes/expenses');
 const categoryRoutes = require('./routes/categories');
 const currencyRoutes = require('./routes/currencies');
 const reportRoutes = require('./routes/reports');
+const emailRoutes = require('./routes/email');
 
 const app = express();
 // Permitir que Express confíe en el proxy (Nginx) para X-Forwarded-For
@@ -124,6 +125,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/currencies', currencyRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/email', emailRoutes);
 
 // Endpoint de verificación de salud
 app.get('/api/health', (req, res) => {

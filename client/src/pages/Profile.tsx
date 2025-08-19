@@ -7,6 +7,7 @@ import api from '../utils/api';
 const Profile: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -166,6 +167,21 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleSendTestEmail = async () => {
+    setErrors({});
+    setSuccessMessage('');
+    try {
+      setTestEmailLoading(true);
+      await api.post('/email/test');
+      setSuccessMessage('Correo de prueba enviado correctamente');
+    } catch (error: any) {
+      console.error('Error al enviar el correo de prueba:', error);
+      setErrors({ emailTest: error.response?.data?.message || 'Error al enviar el correo de prueba' });
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
+
   const clearMessages = () => {
     setErrors({});
     setSuccessMessage('');
@@ -193,6 +209,32 @@ const Profile: React.FC = () => {
           {successMessage}
         </div>
       )}
+
+      {errors.emailTest && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {errors.emailTest}
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleSendTestEmail}
+          disabled={testEmailLoading}
+          className="btn-secondary inline-flex items-center"
+        >
+          {testEmailLoading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span className="ml-2">Enviando...</span>
+            </>
+          ) : (
+            <>
+              <FiMail className="w-4 h-4 mr-2" />
+              Enviar correo de prueba
+            </>
+          )}
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Information */}
