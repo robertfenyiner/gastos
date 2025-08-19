@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Categories from './pages/Categories';
 import Profile from './pages/Profile';
+import Reports from './pages/Reports';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -67,6 +68,7 @@ const AppRoutes: React.FC = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />

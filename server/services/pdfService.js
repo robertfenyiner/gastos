@@ -50,8 +50,8 @@ class PDFService {
   }
 
   async getReportData(userId, options) {
-    const { startDate, endDate, categoryId } = options;
-    
+    const { startDate, endDate, categoryId, search } = options;
+
     let whereClause = 'WHERE e.user_id = ?';
     let params = [userId];
 
@@ -68,6 +68,11 @@ class PDFService {
     if (categoryId) {
       whereClause += ' AND e.category_id = ?';
       params.push(categoryId);
+    }
+
+    if (search) {
+      whereClause += ' AND e.description LIKE ?';
+      params.push(`%${search}%`);
     }
 
     // Get expenses

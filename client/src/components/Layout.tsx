@@ -3,11 +3,12 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   FiHome, 
   FiDollarSign, 
-  FiTag, 
-  FiUser, 
-  FiMenu, 
+  FiTag,
+  FiUser,
+  FiFileText,
+  FiMenu,
   FiX,
-  FiLogOut 
+  FiLogOut
 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { getInitials } from '../utils/format';
@@ -21,6 +22,7 @@ const Layout: React.FC = () => {
     { name: 'Inicio', href: '/dashboard', icon: FiHome },
     { name: 'Gastos', href: '/expenses', icon: FiDollarSign },
     { name: 'Categorías', href: '/categories', icon: FiTag },
+    { name: 'Reportes', href: '/reports', icon: FiFileText },
     { name: 'Perfil', href: '/profile', icon: FiUser },
   ];
 
