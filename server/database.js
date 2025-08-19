@@ -77,6 +77,7 @@ db.serialize(() => {
       is_recurring BOOLEAN DEFAULT FALSE,
       recurring_frequency VARCHAR(20),
       next_due_date DATE,
+      reminder_days_advance INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -84,6 +85,16 @@ db.serialize(() => {
       FOREIGN KEY (currency_id) REFERENCES currencies (id) ON DELETE CASCADE
     )
   `);
+
+  // Add reminder_days_advance column to existing tables (migration)
+  db.run(`
+    ALTER TABLE expenses ADD COLUMN reminder_days_advance INTEGER DEFAULT 1
+  `, (err) => {
+    // Ignore error if column already exists
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding reminder_days_advance column:', err);
+    }
+  });
 
   // Tabla de recordatorios de email
   db.run(`

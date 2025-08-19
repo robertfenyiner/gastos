@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiUser, FiMail, FiKey, FiSave, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiMail, FiKey, FiSave, FiEye, FiEyeOff, FiSend } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
@@ -7,6 +7,7 @@ import api from '../utils/api';
 const Profile: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -155,6 +156,25 @@ const Profile: React.FC = () => {
   const clearMessages = () => {
     setErrors({});
     setSuccessMessage('');
+  };
+
+  const handleTestEmail = async () => {
+    try {
+      setEmailLoading(true);
+      setSuccessMessage('');
+      setErrors({});
+
+      await api.post('/auth/test-email');
+      
+      setSuccessMessage('Correo de prueba enviado correctamente. Revisa tu bandeja de entrada.');
+    } catch (error: any) {
+      console.error('Error al enviar el correo de prueba:', error);
+      setErrors({
+        email: error.response?.data?.message || 'Error al enviar el correo de prueba'
+      });
+    } finally {
+      setEmailLoading(false);
+    }
   };
 
   if (!user) {
@@ -403,6 +423,47 @@ const Profile: React.FC = () => {
                 </ul>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Email Configuration */}
+      <div className="bg-white shadow-sm rounded-lg border">
+        <div className="p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <FiMail className="w-5 h-5 mr-2" />
+            Configuración de correo electrónico
+          </h2>
+          
+          {errors.email && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-md">
+              {errors.email}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-3">
+                Prueba la configuración de correo electrónico para verificar que los recordatorios de gastos recurrentes funcionen correctamente.
+              </p>
+              <button
+                onClick={handleTestEmail}
+                disabled={emailLoading}
+                className="btn-primary flex items-center justify-center"
+              >
+                {emailLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span className="ml-2">Enviando...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiSend className="w-4 h-4 mr-2" />
+                    Enviar correo de prueba
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

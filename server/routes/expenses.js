@@ -127,7 +127,8 @@ router.post('/', authMiddleware, (req, res) => {
     description,
     date,
     isRecurring = false,
-    recurringFrequency = null
+    recurringFrequency = null,
+    reminderDaysAdvance = 1
   } = req.body;
 
   const resolvedCategoryId = categoryId || category_id;
@@ -139,6 +140,11 @@ router.post('/', authMiddleware, (req, res) => {
 
   if (amount <= 0) {
     return res.status(400).json({ message: 'El monto debe ser mayor a 0' });
+  }
+
+  // Validate reminderDaysAdvance
+  if (reminderDaysAdvance < 1 || reminderDaysAdvance > 3) {
+    return res.status(400).json({ message: 'Los días de anticipación deben ser entre 1 y 3' });
   }
 
   // Calculate next due date for recurring expenses
@@ -163,13 +169,13 @@ router.post('/', authMiddleware, (req, res) => {
 
   const query = `
     INSERT INTO expenses 
-    (user_id, category_id, currency_id, amount, description, date, is_recurring, recurring_frequency, next_due_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (user_id, category_id, currency_id, amount, description, date, is_recurring, recurring_frequency, next_due_date, reminder_days_advance)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(query, [
     userId, resolvedCategoryId, resolvedCurrencyId, amount, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0]
+    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance
   ], function(err) {
     if (err) {
       return res.status(500).json({ message: 'Error al crear el gasto' });
@@ -211,7 +217,8 @@ router.put('/:id', authMiddleware, (req, res) => {
     description,
     date,
     isRecurring,
-    recurringFrequency
+    recurringFrequency,
+    reminderDaysAdvance = 1
   } = req.body;
 
   const resolvedCategoryId = categoryId || category_id;
@@ -223,6 +230,11 @@ router.put('/:id', authMiddleware, (req, res) => {
 
   if (amount <= 0) {
     return res.status(400).json({ message: 'El monto debe ser mayor a 0' });
+  }
+
+  // Validate reminderDaysAdvance
+  if (reminderDaysAdvance < 1 || reminderDaysAdvance > 3) {
+    return res.status(400).json({ message: 'Los días de anticipación deben ser entre 1 y 3' });
   }
 
   // Calculate next due date for recurring expenses
@@ -248,13 +260,13 @@ router.put('/:id', authMiddleware, (req, res) => {
   const query = `
     UPDATE expenses 
     SET category_id = ?, currency_id = ?, amount = ?, description = ?, date = ?, 
-        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, updated_at = CURRENT_TIMESTAMP
+        is_recurring = ?, recurring_frequency = ?, next_due_date = ?, reminder_days_advance = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND user_id = ?
   `;
 
   db.run(query, [
     resolvedCategoryId, resolvedCurrencyId, amount, description, date,
-    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0],
+    isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance,
     expenseId, userId
   ], function(err) {
     if (err) {

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
+const emailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ router.post('/register', async (req, res) => {
           const token = jwt.sign(
             { userId: userId },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
           );
 
           res.status(201).json({
@@ -115,7 +116,7 @@ router.post('/login', (req, res) => {
       const token = jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN }
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
       );
 
       res.json({
@@ -136,8 +137,39 @@ router.post('/login', (req, res) => {
 // Get current user
 router.get('/me', authMiddleware, (req, res) => {
   res.json({
-    user: req.user
+    user: req.user,
+    tokenInfo: {
+      issuedAt: new Date(req.tokenPayload.iat * 1000).toISOString(),
+      expiresAt: new Date(req.tokenPayload.exp * 1000).toISOString(),
+      timeRemaining: Math.max(0, req.tokenPayload.exp * 1000 - Date.now())
+    }
   });
+});
+
+// Refresh JWT token
+router.post('/refresh', authMiddleware, (req, res) => {
+  try {
+    const user = req.user;
+    
+    // Generate new JWT token
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    res.json({
+      message: 'Token renovado exitosamente',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error del servidor' });
+  }
 });
 
 // Change password
@@ -181,6 +213,35 @@ router.put('/change-password', authMiddleware, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
+// Test email functionality
+router.post('/test-email', authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Check if email service is configured
+    if (!emailService.transporter) {
+      return res.status(503).json({ 
+        message: 'El servicio de correo electrónico no está configurado' 
+      });
+    }
+
+    // Send test email
+    await emailService.sendTestEmail(user);
+    
+    res.json({ 
+      message: 'Correo de prueba enviado exitosamente',
+      recipient: user.email
+    });
+
+  } catch (error) {
+    console.error('Error sending test email:', error);
+    res.status(500).json({ 
+      message: 'Error al enviar el correo de prueba',
+      error: error.message 
+    });
   }
 });
 

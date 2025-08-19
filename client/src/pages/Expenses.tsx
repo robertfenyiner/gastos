@@ -13,6 +13,7 @@ interface Expense {
   is_recurring: boolean;
   recurring_frequency?: string;
   next_due_date?: string;
+  reminder_days_advance?: number;
   category_name: string;
   category_color: string;
   currency_code: string;
@@ -55,7 +56,8 @@ const Expenses: React.FC = () => {
     categoryId: '',
     currencyId: '',
     is_recurring: false,
-    recurring_frequency: 'monthly'
+    recurring_frequency: 'monthly',
+    reminderDaysAdvance: 1
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -177,7 +179,8 @@ const Expenses: React.FC = () => {
       categoryId: '', // Will be set when categories are loaded
       currencyId: '', // Will be set when currencies are loaded
       is_recurring: expense.is_recurring,
-      recurring_frequency: expense.recurring_frequency || 'monthly'
+      recurring_frequency: expense.recurring_frequency || 'monthly',
+      reminderDaysAdvance: expense.reminder_days_advance || 1
     });
     setShowModal(true);
   };
@@ -203,7 +206,8 @@ const Expenses: React.FC = () => {
       categoryId: '',
       currencyId: currencies.length > 0 ? currencies[0].id.toString() : '',
       is_recurring: false,
-      recurring_frequency: 'monthly'
+      recurring_frequency: 'monthly',
+      reminderDaysAdvance: 1
     });
     setErrors({});
   };
@@ -549,21 +553,41 @@ const Expenses: React.FC = () => {
                 </div>
 
                 {formData.is_recurring && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Frecuencia
-                    </label>
-                    <select
-                      value={formData.recurring_frequency}
-                      onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
-                      className="input-field"
-                    >
-                      <option value="daily">Diaria</option>
-                      <option value="weekly">Semanal</option>
-                      <option value="monthly">Mensual</option>
-                      <option value="yearly">Anual</option>
-                    </select>
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Frecuencia
+                      </label>
+                      <select
+                        value={formData.recurring_frequency}
+                        onChange={(e) => setFormData(prev => ({ ...prev, recurring_frequency: e.target.value }))}
+                        className="input-field"
+                      >
+                        <option value="daily">Diaria</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensual</option>
+                        <option value="yearly">Anual</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Días de anticipación para recordatorio
+                      </label>
+                      <select
+                        value={formData.reminderDaysAdvance}
+                        onChange={(e) => setFormData(prev => ({ ...prev, reminderDaysAdvance: parseInt(e.target.value) }))}
+                        className="input-field"
+                      >
+                        <option value={1}>1 día antes</option>
+                        <option value={2}>2 días antes</option>
+                        <option value={3}>3 días antes</option>
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Se enviará un recordatorio por correo electrónico con la anticipación seleccionada
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex space-x-3 pt-4">

@@ -59,7 +59,8 @@ class EmailService {
   }
 
   async sendExpenseReminder(user, expense) {
-    const subject = `Reminder: ${expense.description} due soon`;
+    const daysInAdvance = expense.reminder_days_advance || 1;
+    const subject = `Recordatorio: ${expense.description} vence ${daysInAdvance === 1 ? 'mañana' : `en ${daysInAdvance} días`}`;
     
     const html = `
       <!DOCTYPE html>
@@ -67,7 +68,7 @@ class EmailService {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Expense Reminder</title>
+        <title>Recordatorio de Gasto</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -82,32 +83,32 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>💰 Expense Reminder</h1>
+            <h1>💰 Recordatorio de Gasto</h1>
           </div>
           
           <div class="content">
-            <p>Hello ${user.username},</p>
+            <p>Hola ${user.username},</p>
             
-            <p>This is a friendly reminder about your upcoming recurring expense:</p>
+            <p>Este es un recordatorio amistoso sobre tu próximo gasto recurrente:</p>
             
             <div class="expense-details">
               <h3>${expense.description}</h3>
               <div class="amount">${expense.currency_symbol}${expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <p><strong>Due Date:</strong> ${expense.next_due_date}</p>
-              <p><strong>Category:</strong> ${expense.category_name}</p>
-              <p><strong>Frequency:</strong> ${expense.recurring_frequency}</p>
+              <p><strong>Fecha de vencimiento:</strong> ${expense.next_due_date}</p>
+              <p><strong>Categoría:</strong> ${expense.category_name}</p>
+              <p><strong>Frecuencia:</strong> ${expense.recurring_frequency}</p>
             </div>
             
-            <p>Don't forget to make this payment to stay on top of your finances!</p>
+            <p>¡No olvides realizar este pago para mantener tus finanzas al día!</p>
             
             <a href="${process.env.APP_URL || 'http://localhost:3000'}/expenses" class="button">
-              View in Expense Tracker
+              Ver en Gastos Robert
             </a>
           </div>
           
           <div class="footer">
-            <p>This is an automated reminder from your Expense Tracker app.</p>
-            <p>If you no longer want to receive these reminders, you can disable them in your profile settings.</p>
+            <p>Este es un recordatorio automático de tu aplicación Gastos Robert.</p>
+            <p>Si ya no deseas recibir estos recordatorios, puedes deshabilitarlos en la configuración de tu perfil.</p>
           </div>
         </div>
       </body>
@@ -115,21 +116,92 @@ class EmailService {
     `;
 
     const text = `
-      Expense Reminder
+      Recordatorio de Gasto
       
-      Hello ${user.username},
+      Hola ${user.username},
       
-      This is a reminder about your upcoming recurring expense:
+      Este es un recordatorio sobre tu próximo gasto recurrente:
       
       ${expense.description}
-      Amount: ${expense.currency_symbol}${expense.amount}
-      Due Date: ${expense.next_due_date}
-      Category: ${expense.category_name}
-      Frequency: ${expense.recurring_frequency}
+      Monto: ${expense.currency_symbol}${expense.amount}
+      Fecha de vencimiento: ${expense.next_due_date}
+      Categoría: ${expense.category_name}
+      Frecuencia: ${expense.recurring_frequency}
       
-      Don't forget to make this payment!
+      ¡No olvides realizar este pago!
       
-      Visit your Expense Tracker: ${process.env.APP_URL || 'http://localhost:3000'}/expenses
+      Visita Gastos Robert: ${process.env.APP_URL || 'http://localhost:3000'}/expenses
+    `;
+
+    return this.sendEmail(user.email, subject, html, text);
+  }
+
+  async sendTestEmail(user) {
+    const subject = `Prueba de correo - Gastos Robert`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Prueba de Correo</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #10B981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; }
+          .success-message { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 8px; margin: 15px 0; }
+          .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>✅ Prueba de Correo</h1>
+          </div>
+          
+          <div class="content">
+            <p>Hola ${user.username},</p>
+            
+            <div class="success-message">
+              <strong>¡Excelente!</strong> El servicio de correo electrónico de Gastos Robert está funcionando correctamente.
+            </div>
+            
+            <p>Esta es una prueba para verificar que:</p>
+            <ul>
+              <li>✅ La configuración del servidor de correo es correcta</li>
+              <li>✅ Los correos pueden ser enviados exitosamente</li>
+              <li>✅ Los recordatorios de gastos recurrentes funcionarán correctamente</li>
+            </ul>
+            
+            <p>Tu aplicación de gestión de gastos está lista para enviarte recordatorios importantes.</p>
+          </div>
+          
+          <div class="footer">
+            <p>Esta es una prueba de configuración de Gastos Robert.</p>
+            <p>Fecha de prueba: ${new Date().toLocaleDateString('es-ES')}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+      Prueba de Correo - Gastos Robert
+      
+      Hola ${user.username},
+      
+      ¡Excelente! El servicio de correo electrónico está funcionando correctamente.
+      
+      Esta prueba verifica que:
+      ✅ La configuración del servidor de correo es correcta
+      ✅ Los correos pueden ser enviados exitosamente
+      ✅ Los recordatorios de gastos recurrentes funcionarán correctamente
+      
+      Tu aplicación está lista para enviarte recordatorios importantes.
+      
+      Fecha de prueba: ${new Date().toLocaleDateString('es-ES')}
     `;
 
     return this.sendEmail(user.email, subject, html, text);
@@ -248,17 +320,17 @@ class EmailService {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-      // Get recurring expenses due today or tomorrow
+      
+      // Get recurring expenses that should be reminded based on their reminder_days_advance
       const query = `
-        SELECT e.*, u.username, u.email, c.name as category_name, cur.symbol as currency_symbol
+        SELECT e.*, u.username, u.email, c.name as category_name, cur.symbol as currency_symbol,
+               date(e.next_due_date, '-' || COALESCE(e.reminder_days_advance, 1) || ' day') as reminder_date
         FROM expenses e
         JOIN users u ON e.user_id = u.id
         JOIN categories c ON e.category_id = c.id
         JOIN currencies cur ON e.currency_id = cur.id
         WHERE e.is_recurring = 1 
-        AND e.next_due_date IN (?, ?)
+        AND date(e.next_due_date, '-' || COALESCE(e.reminder_days_advance, 1) || ' day') = ?
         AND NOT EXISTS (
           SELECT 1 FROM email_reminders er 
           WHERE er.expense_id = e.id 
@@ -267,7 +339,7 @@ class EmailService {
         )
       `;
 
-      db.all(query, [today, tomorrow, today], async (err, expenses) => {
+      db.all(query, [today, today], async (err, expenses) => {
         if (err) {
           console.error('Error fetching reminder expenses:', err);
           return;
