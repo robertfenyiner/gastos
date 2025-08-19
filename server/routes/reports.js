@@ -14,6 +14,7 @@ router.post('/generate', authMiddleware, async (req, res) => {
       startDate,
       endDate,
       categoryId,
+      search,
       format = 'monthly',
       includeSummary = true,
       includeCharts = true
@@ -23,6 +24,7 @@ router.post('/generate', authMiddleware, async (req, res) => {
       startDate,
       endDate,
       categoryId,
+      search,
       format,
       includeSummary,
       includeCharts
