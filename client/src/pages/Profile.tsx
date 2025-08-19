@@ -4,6 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
 
+interface ProfileForm {
+  username: string;
+  email: string;
+  reportEmailsEnabled: boolean;
+  paymentCycle: 'weekly' | 'biweekly' | 'monthly';
+  reminderDaysBefore: number;
+}
+
 const Profile: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -13,7 +21,7 @@ const Profile: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Profile form state
-  const [profileForm, setProfileForm] = useState({
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
     username: user?.username || '',
     email: user?.email || '',
     reportEmailsEnabled: user?.reportEmailsEnabled ?? false,
@@ -314,7 +322,10 @@ const Profile: React.FC = () => {
                 <select
                   value={profileForm.paymentCycle}
                   onChange={(e) => {
-                    setProfileForm(prev => ({ ...prev, paymentCycle: e.target.value }));
+                    setProfileForm(prev => ({
+                      ...prev,
+                      paymentCycle: e.target.value as ProfileForm['paymentCycle']
+                    }));
                     clearMessages();
                   }}
                   className="input-field"
