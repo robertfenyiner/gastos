@@ -79,6 +79,7 @@ db.serialize(() => {
       is_recurring BOOLEAN DEFAULT FALSE,
       recurring_frequency VARCHAR(20),
       next_due_date DATE,
+      attachment_path TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -86,6 +87,19 @@ db.serialize(() => {
       FOREIGN KEY (currency_id) REFERENCES currencies (id) ON DELETE CASCADE
     )
   `);
+
+  // Ensure attachment_path column exists for older databases
+  db.all("PRAGMA table_info(expenses)", (err, columns) => {
+    if (err) {
+      console.error('Error inspeccionando tabla expenses:', err);
+    } else if (!columns.some(col => col.name === 'attachment_path')) {
+      db.run('ALTER TABLE expenses ADD COLUMN attachment_path TEXT', alterErr => {
+        if (alterErr) {
+          console.error('Error agregando attachment_path:', alterErr);
+        }
+      });
+    }
+  });
 
   // Tabla de recordatorios de email
   db.run(`
