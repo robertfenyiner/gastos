@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
+const currencyService = require('../services/currencyService');
 
 const router = express.Router();
 
@@ -116,7 +117,7 @@ router.get('/:id', authMiddleware, (req, res) => {
 });
 
 // Create new expense
-router.post('/', authMiddleware, (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const {
     categoryId,
@@ -161,14 +162,36 @@ router.post('/', authMiddleware, (req, res) => {
     }
   }
 
+  let amountCop, exchangeRateCop;
+  try {
+    const currency = await new Promise((resolve, reject) => {
+      db.get('SELECT code FROM currencies WHERE id = ?', [resolvedCurrencyId], (err, row) => {
+        if (err) {
+          reject(err);
+        } else if (!row) {
+          reject(new Error('Moneda no encontrada'));
+        } else {
+          resolve(row);
+        }
+      });
+    });
+
+    const conversion = await currencyService.convertCurrency(amount, currency.code, 'COP');
+    amountCop = conversion.convertedAmount;
+    exchangeRateCop = conversion.exchangeRate;
+  } catch (error) {
+    console.error('Error converting currency to COP:', error);
+    return res.status(500).json({ message: 'Error al convertir la moneda' });
+  }
+
   const query = `
-    INSERT INTO expenses 
-    (user_id, category_id, currency_id, amount, description, date, is_recurring, recurring_frequency, next_due_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO expenses
+    (user_id, category_id, currency_id, amount, amount_cop, exchange_rate_cop, description, date, is_recurring, recurring_frequency, next_due_date)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(query, [
-    userId, resolvedCategoryId, resolvedCurrencyId, amount, description, date,
+    userId, resolvedCategoryId, resolvedCurrencyId, amount, amountCop, exchangeRateCop, description, date,
     isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0]
   ], function(err) {
     if (err) {
@@ -199,7 +222,7 @@ router.post('/', authMiddleware, (req, res) => {
 });
 
 // Update expense
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const expenseId = req.params.id;
   const {
@@ -245,15 +268,37 @@ router.put('/:id', authMiddleware, (req, res) => {
     }
   }
 
+  let amountCop, exchangeRateCop;
+  try {
+    const currency = await new Promise((resolve, reject) => {
+      db.get('SELECT code FROM currencies WHERE id = ?', [resolvedCurrencyId], (err, row) => {
+        if (err) {
+          reject(err);
+        } else if (!row) {
+          reject(new Error('Moneda no encontrada'));
+        } else {
+          resolve(row);
+        }
+      });
+    });
+
+    const conversion = await currencyService.convertCurrency(amount, currency.code, 'COP');
+    amountCop = conversion.convertedAmount;
+    exchangeRateCop = conversion.exchangeRate;
+  } catch (error) {
+    console.error('Error converting currency to COP:', error);
+    return res.status(500).json({ message: 'Error al convertir la moneda' });
+  }
+
   const query = `
-    UPDATE expenses 
-    SET category_id = ?, currency_id = ?, amount = ?, description = ?, date = ?, 
+    UPDATE expenses
+    SET category_id = ?, currency_id = ?, amount = ?, amount_cop = ?, exchange_rate_cop = ?, description = ?, date = ?,
         is_recurring = ?, recurring_frequency = ?, next_due_date = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND user_id = ?
   `;
 
   db.run(query, [
-    resolvedCategoryId, resolvedCurrencyId, amount, description, date,
+    resolvedCategoryId, resolvedCurrencyId, amount, amountCop, exchangeRateCop, description, date,
     isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0],
     expenseId, userId
   ], function(err) {
