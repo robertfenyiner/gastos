@@ -107,7 +107,9 @@ db.serialize(() => {
     ['CAD', 'Dólar Canadiense', 'C$'],
     ['GBP', 'Libra Esterlina', '£'],
     ['JPY', 'Yen Japonés', '¥'],
-    ['MXN', 'Peso Mexicano', '$']
+    ['MXN', 'Peso Mexicano', '$'],
+    ['TRY', 'Lira Turca', '₺'],
+    ['NGN', 'Naira Nigeriana', '₦']
   ];
 
   const insertCurrency = db.prepare(`
