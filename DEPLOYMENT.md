@@ -499,20 +499,16 @@ sudo tail -f /var/log/nginx/access.log
 
 ```bash
 # Reiniciar aplicación
-pm2 restart expense-tracker-api
+pm2 restart gastos-robert-api
 
 # Ver logs en tiempo real
-pm2 logs expense-tracker-api --follow
+pm2 logs gastos-robert-api --follow
 
 # Monitorear recursos
 pm2 monit
 
 # Actualizar aplicación
-cd /opt/expense-tracker
-git pull origin main
-npm install --production
-cd client && npm run build
-pm2 restart expense-tracker-api
+./scripts/actualizar-gastos-robert.sh [rama|tag]
 ```
 
 ### Gestión de Nginx
