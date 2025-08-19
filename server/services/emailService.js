@@ -60,6 +60,13 @@ class EmailService {
     }
   }
 
+  async sendTestEmail(user) {
+    const subject = 'Test Email';
+    const html = `<p>Hola ${user.username || ''}, este es un correo de prueba.</p>`;
+    const text = `Hola ${user.username || ''}, este es un correo de prueba.`;
+    return this.sendEmail(user.email, subject, html, text);
+  }
+
   async sendExpenseReminder(user, expense) {
     const subject = `Reminder: ${expense.description} due soon`;
     
