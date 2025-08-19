@@ -127,9 +127,31 @@ const Reports: React.FC = () => {
 
       const response = await api.post('/reports/generate-excel', reportFilters);
       
-      // Download the file
+      // Download the file using fetch to include auth headers
       const downloadUrl = response.data.downloadUrl;
-      window.open(downloadUrl, '_blank');
+      const token = localStorage.getItem('token');
+      
+      const downloadResponse = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!downloadResponse.ok) {
+        throw new Error('Error al descargar el archivo');
+      }
+      
+      // Create blob and download
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `Reporte_Gastos_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
       
       alert(`Reporte Excel generado exitosamente con ${response.data.recordCount} registros`);
       
@@ -156,9 +178,31 @@ const Reports: React.FC = () => {
 
       const response = await api.post('/reports/generate', reportOptions);
       
-      // Download the file
+      // Download the file using fetch to include auth headers
       const downloadUrl = response.data.downloadUrl;
-      window.open(downloadUrl, '_blank');
+      const token = localStorage.getItem('token');
+      
+      const downloadResponse = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!downloadResponse.ok) {
+        throw new Error('Error al descargar el archivo');
+      }
+      
+      // Create blob and download
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `Reporte_PDF_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
       
       alert('Reporte PDF generado exitosamente');
       
