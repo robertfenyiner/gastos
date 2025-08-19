@@ -5,6 +5,8 @@ export interface User {
   created_at?: string | null;
   updated_at?: string | null;
   reportEmailsEnabled?: boolean;
+  paymentCycle?: 'weekly' | 'biweekly' | 'monthly';
+  reminderDaysBefore?: number;
 }
 
 export interface Category {

@@ -9,7 +9,7 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, paymentCycle = 'monthly', reminderDaysBefore = 3 } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
@@ -35,8 +35,8 @@ router.post('/register', async (req, res) => {
 
       // Insert user
       db.run(
-        'INSERT INTO users (username, email, password_hash, report_emails_enabled) VALUES (?, ?, ?, 1)',
-        [username, email, passwordHash],
+        'INSERT INTO users (username, email, password_hash, report_emails_enabled, payment_cycle, reminder_days_before) VALUES (?, ?, ?, 1, ?, ?)',
+        [username, email, passwordHash, paymentCycle, reminderDaysBefore],
         function(err) {
           if (err) {
             return res.status(500).json({ message: 'Error al crear el usuario' });
@@ -77,7 +77,9 @@ router.post('/register', async (req, res) => {
               id: userId,
               username,
               email,
-              reportEmailsEnabled: true
+              reportEmailsEnabled: true,
+              paymentCycle,
+              reminderDaysBefore
             }
           });
         }
@@ -126,7 +128,9 @@ router.post('/login', (req, res) => {
           id: user.id,
           username: user.username,
           email: user.email,
-          reportEmailsEnabled: !!user.report_emails_enabled
+          reportEmailsEnabled: !!user.report_emails_enabled,
+          paymentCycle: user.payment_cycle,
+          reminderDaysBefore: user.reminder_days_before
         }
       });
     });
@@ -139,15 +143,15 @@ router.post('/login', (req, res) => {
 router.put('/profile', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id;
-    const { username, email, reportEmailsEnabled } = req.body;
+    const { username, email, reportEmailsEnabled, paymentCycle = 'monthly', reminderDaysBefore = 3 } = req.body;
 
     if (!username || !email) {
       return res.status(400).json({ message: 'El nombre de usuario y el correo son obligatorios' });
     }
 
     db.run(
-      'UPDATE users SET username = ?, email = ?, report_emails_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [username, email, reportEmailsEnabled ? 1 : 0, userId],
+      'UPDATE users SET username = ?, email = ?, report_emails_enabled = ?, payment_cycle = ?, reminder_days_before = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [username, email, reportEmailsEnabled ? 1 : 0, paymentCycle, reminderDaysBefore, userId],
       function(err) {
         if (err) {
           return res.status(500).json({ message: 'Error al actualizar el perfil' });
@@ -159,7 +163,9 @@ router.put('/profile', authMiddleware, (req, res) => {
             id: userId,
             username,
             email,
-            reportEmailsEnabled: !!reportEmailsEnabled
+            reportEmailsEnabled: !!reportEmailsEnabled,
+            paymentCycle,
+            reminderDaysBefore
           }
         });
       }
