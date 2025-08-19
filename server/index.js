@@ -54,20 +54,34 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
-// Limitación de velocidad (Rate limiting)
+// Limitación de velocidad (Rate limiting) - Configuración más permisiva
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // limitar cada IP a 100 requests por ventana de tiempo
-  message: 'Demasiadas peticiones desde esta IP, intente de nuevo más tarde.'
+  max: 500, // Aumentado de 100 a 500 requests por ventana
+  message: { message: 'Demasiadas peticiones desde esta IP, intente de nuevo más tarde.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // No contar requests exitosos
+  skip: (req) => {
+    // Omitir rate limiting para health check y static files
+    return req.path === '/api/health' || req.path.startsWith('/static/');
+  }
 });
 app.use('/api/', limiter);
 
 // Limitación más estricta para endpoints de autenticación
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 15, // limitar cada IP a 15 requests por ventana para auth (aumentado de 5 a 15)
-  message: 'Demasiados intentos de autenticación, intente de nuevo más tarde.',
-  skipSuccessfulRequests: true // No contar requests exitosos hacia el límite
+  max: 50, // Aumentado de 15 a 50 intentos de auth por ventana
+  message: { message: 'Demasiados intentos de autenticación, intente de nuevo más tarde.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // No contar requests exitosos hacia el límite
+  skip: (req) => {
+    // Omitir para testing o IPs locales
+    const ip = req.ip || req.connection.remoteAddress;
+    return ip === '127.0.0.1' || ip === '::1';
+  }
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
@@ -129,6 +143,27 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     version: '1.0.0',
     app: 'Gastos Robert'
+  });
+});
+
+// Endpoint para limpiar rate limiting (solo desarrollo)
+app.get('/api/clear-rate-limit', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ message: 'No disponible en producción' });
+  }
+  
+  // Limpiar contadores de rate limiting
+  if (limiter.resetKey) {
+    limiter.resetKey(req.ip);
+  }
+  if (authLimiter.resetKey) {
+    authLimiter.resetKey(req.ip);
+  }
+  
+  res.json({ 
+    message: 'Rate limiting limpiado para tu IP',
+    ip: req.ip,
+    timestamp: new Date().toISOString()
   });
 });
 
