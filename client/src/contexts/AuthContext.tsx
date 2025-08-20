@@ -210,20 +210,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const updateUser = useCallback(async (updates: Partial<User>) => {
+    console.log('[AUTH_CONTEXT] updateUser llamado con:', updates);
+    
     if (user) {
       const updatedUser = { ...user, ...updates };
+      console.log('[AUTH_CONTEXT] Usuario antes:', user);
+      console.log('[AUTH_CONTEXT] Usuario después:', updatedUser);
+      
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
       
       // Si se actualizó la foto de perfil, incrementar la versión
       if (updates.profile_picture !== undefined) {
-        setProfilePictureVersion(prev => prev + 1);
+        console.log('[AUTH_CONTEXT] Incrementando versión de foto de perfil');
+        setProfilePictureVersion(prev => {
+          const newVersion = prev + 1;
+          console.log('[AUTH_CONTEXT] Nueva versión:', newVersion);
+          return newVersion;
+        });
       }
       
       // También verificar con el servidor para obtener la información más actualizada
       if (token) {
         try {
+          console.log('[AUTH_CONTEXT] Consultando servidor para sincronizar usuario...');
           const response = await api.get('/auth/me');
+          console.log('[AUTH_CONTEXT] Respuesta del servidor:', response.data);
+          
           if (response.data?.user) {
             const serverUser = {
               id: response.data.user.id,
@@ -234,6 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               created_at: response.data.user.created_at || null,
               updated_at: response.data.user.updated_at || null
             };
+            console.log('[AUTH_CONTEXT] Actualizando con datos del servidor:', serverUser);
             setUser(serverUser);
             localStorage.setItem('user', JSON.stringify(serverUser));
           }

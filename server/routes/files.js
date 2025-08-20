@@ -111,10 +111,19 @@ router.post('/expense/:expenseId', authMiddleware, expenseUpload.array('attachme
 router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(`[PROFILE_UPLOAD] Usuario ${userId} subiendo foto de perfil`);
 
     if (!req.file) {
+      console.log(`[PROFILE_UPLOAD] Error: No se recibió archivo`);
       return res.status(400).json({ message: 'No se envió archivo' });
     }
+    
+    console.log(`[PROFILE_UPLOAD] Archivo recibido:`, {
+      originalname: req.file.originalname,
+      filename: req.file.filename,
+      size: req.file.size,
+      path: req.file.path
+    });
 
     // Delete old profile picture if exists
     const oldPicture = await new Promise((resolve, reject) => {
@@ -173,21 +182,30 @@ router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), 
     });
 
     // Update user's profile picture reference
+    console.log(`[PROFILE_UPLOAD] Actualizando base de datos: usuario ${userId}, filename: ${req.file.filename}`);
     await new Promise((resolve, reject) => {
-      db.run('UPDATE users SET profile_picture = ? WHERE id = ?', [req.file.filename, userId], (err) => {
-        if (err) reject(err);
-        else resolve();
+      db.run('UPDATE users SET profile_picture = ? WHERE id = ?', [req.file.filename, userId], function(err) {
+        if (err) {
+          console.log(`[PROFILE_UPLOAD] Error actualizando base de datos:`, err);
+          reject(err);
+        } else {
+          console.log(`[PROFILE_UPLOAD] Base de datos actualizada. Filas afectadas: ${this.changes}`);
+          resolve();
+        }
       });
     });
 
-    res.json({
+    const response = {
       message: 'Foto de perfil actualizada exitosamente',
       profilePicture: {
         id: fileId,
         fileName: req.file.filename,
         downloadUrl: `/api/files/download/${fileId}`
       }
-    });
+    };
+    
+    console.log(`[PROFILE_UPLOAD] Enviando respuesta:`, response);
+    res.json(response);
 
   } catch (error) {
     console.error('Error uploading profile picture:', error);

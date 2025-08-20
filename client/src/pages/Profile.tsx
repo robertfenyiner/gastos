@@ -33,9 +33,14 @@ const Profile: React.FC = () => {
 
   // Load profile picture on component mount and when version changes
   React.useEffect(() => {
+    console.log('[PROFILE] useEffect triggered - user:', user?.profile_picture, 'version:', profilePictureVersion);
+    
     if (user?.profile_picture) {
-      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}?v=${profilePictureVersion}`);
+      const newUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}?v=${profilePictureVersion}`;
+      console.log('[PROFILE] Setting new profile picture URL:', newUrl);
+      setProfilePicture(newUrl);
     } else {
+      console.log('[PROFILE] No profile picture, setting to null');
       setProfilePicture(null);
     }
   }, [user, profilePictureVersion]);
@@ -64,6 +69,8 @@ const Profile: React.FC = () => {
     setErrors({ ...errors, profilePicture: '' });
     
     try {
+      console.log('[FRONTEND] Subiendo archivo:', file.name, file.size);
+      
       const formData = new FormData();
       formData.append('profilePicture', file);
       
@@ -73,9 +80,14 @@ const Profile: React.FC = () => {
         }
       });
       
+      console.log('[FRONTEND] Respuesta del servidor:', response.data);
+      
       // Update the user context with the new profile picture filename
       const fileName = response.data.profilePicture.fileName;
+      console.log('[FRONTEND] Actualizando usuario con filename:', fileName);
+      
       await updateUser({ profile_picture: fileName });
+      console.log('[FRONTEND] Usuario actualizado');
       
       setSuccessMessage('Foto de perfil actualizada exitosamente');
       setTimeout(() => setSuccessMessage(''), 3000);
