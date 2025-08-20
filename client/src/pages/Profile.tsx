@@ -31,9 +31,9 @@ const Profile: React.FC = () => {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const profilePictureRef = useRef<HTMLInputElement>(null);
 
-  // Load profile picture on component mount and when version changes
+  // Load profile picture on component mount and when user changes
   React.useEffect(() => {
-    console.log('[PROFILE] useEffect triggered - user:', user?.profile_picture, 'version:', profilePictureVersion);
+    console.log('[PROFILE] useEffect triggered - user:', user?.profile_picture);
     
     if (user?.profile_picture) {
       const newUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}?v=${profilePictureVersion}`;
@@ -43,7 +43,7 @@ const Profile: React.FC = () => {
       console.log('[PROFILE] No profile picture, setting to null');
       setProfilePicture(null);
     }
-  }, [user, profilePictureVersion]);
+  }, [user?.profile_picture]); // Solo dependemos del filename, no de la versión
 
   const handleProfilePictureSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -85,6 +85,10 @@ const Profile: React.FC = () => {
       // Update the user context with the new profile picture filename
       const fileName = response.data.profilePicture.fileName;
       console.log('[FRONTEND] Actualizando usuario con filename:', fileName);
+      
+      // Inmediatamente actualizar la URL local con timestamp para forzar recarga
+      const immediateUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${fileName}?t=${Date.now()}`;
+      setProfilePicture(immediateUrl);
       
       await updateUser({ profile_picture: fileName });
       console.log('[FRONTEND] Usuario actualizado');

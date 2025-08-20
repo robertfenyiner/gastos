@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [profilePictureVersion, setProfilePictureVersion] = useState(1);
+  const [profilePictureVersion, setProfilePictureVersion] = useState(Date.now());
 
   // Memoized verify function to prevent race conditions
   const verifyToken = useCallback(async (tokenToVerify: string) => {
@@ -220,14 +220,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      // Si se actualizó la foto de perfil, incrementar la versión
+      // Si se actualizó la foto de perfil, actualizar la versión con timestamp
       if (updates.profile_picture !== undefined) {
-        console.log('[AUTH_CONTEXT] Incrementando versión de foto de perfil');
-        setProfilePictureVersion(prev => {
-          const newVersion = prev + 1;
-          console.log('[AUTH_CONTEXT] Nueva versión:', newVersion);
-          return newVersion;
-        });
+        console.log('[AUTH_CONTEXT] Actualizando versión de foto de perfil');
+        const newVersion = Date.now();
+        console.log('[AUTH_CONTEXT] Nueva versión:', newVersion);
+        setProfilePictureVersion(newVersion);
       }
       
       // También verificar con el servidor para obtener la información más actualizada
