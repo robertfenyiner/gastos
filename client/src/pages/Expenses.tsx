@@ -175,12 +175,17 @@ const Expenses: React.FC = () => {
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
+    
+    // Find the correct category and currency IDs from the current expense
+    const categoryId = categories.find(c => c.name === expense.category_name)?.id?.toString() || '';
+    const currencyId = currencies.find(c => c.code === expense.currency_code)?.id?.toString() || '';
+    
     setFormData({
       amount: expense.amount.toString(),
       description: expense.description,
       date: expense.date,
-      categoryId: '', // Will be set when categories are loaded
-      currencyId: '', // Will be set when currencies are loaded
+      categoryId: categoryId,
+      currencyId: currencyId,
       is_recurring: expense.is_recurring,
       recurring_frequency: expense.recurring_frequency || 'monthly',
       reminderDaysAdvance: expense.reminder_days_advance || 1

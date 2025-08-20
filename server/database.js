@@ -183,9 +183,87 @@ db.serialize(() => {
         console.error('Error creating admin user:', err);
       } else if (this.changes > 0) {
         console.log(`[${new Date().toISOString()}] Usuario administrador 'Robert' creado exitosamente`);
+        
+        // Add default categories for admin user
+        const adminUserId = this.lastID;
+        addDefaultCategories(adminUserId);
+      } else {
+        // User already exists, get the user ID and add categories if needed
+        db.get('SELECT id FROM users WHERE username = ?', ['Robert'], (err, user) => {
+          if (user) {
+            addDefaultCategories(user.id);
+          }
+        });
       }
     });
   });
+
+  // Function to add default categories
+  function addDefaultCategories(userId) {
+    const defaultCategories = [
+      // Basic Categories
+      { name: 'Alimentación', color: '#10b981', icon: 'utensils' },
+      { name: 'Transporte', color: '#3b82f6', icon: 'car' },
+      { name: 'Salud', color: '#ef4444', icon: 'heart' },
+      { name: 'Entretenimiento', color: '#f59e0b', icon: 'film' },
+      { name: 'Compras', color: '#8b5cf6', icon: 'shopping-cart' },
+      
+      // Household/Utilities
+      { name: 'Servicios Públicos', color: '#06b6d4', icon: 'zap' },
+      { name: 'Electricidad', color: '#fbbf24', icon: 'zap' },
+      { name: 'Agua', color: '#06b6d4', icon: 'droplet' },
+      { name: 'Gas', color: '#f97316', icon: 'flame' },
+      { name: 'Internet', color: '#6366f1', icon: 'wifi' },
+      { name: 'Teléfono', color: '#84cc16', icon: 'phone' },
+      { name: 'Cable/TV', color: '#ec4899', icon: 'tv' },
+      
+      // Streaming & Digital Services
+      { name: 'Netflix', color: '#e50914', icon: 'play' },
+      { name: 'Spotify', color: '#1db954', icon: 'music' },
+      { name: 'Amazon Prime', color: '#ff9900', icon: 'package' },
+      { name: 'Disney+', color: '#113ccf', icon: 'star' },
+      { name: 'YouTube Premium', color: '#ff0000', icon: 'play' },
+      { name: 'Apple Music', color: '#fa243c', icon: 'music' },
+      { name: 'HBO Max', color: '#9333ea', icon: 'play' },
+      { name: 'Paramount+', color: '#0064ff', icon: 'play' },
+      
+      // Financial & Insurance
+      { name: 'Seguros', color: '#059669', icon: 'shield' },
+      { name: 'Banco/Tarjetas', color: '#dc2626', icon: 'credit-card' },
+      { name: 'Inversiones', color: '#7c3aed', icon: 'trending-up' },
+      
+      // Home & Maintenance
+      { name: 'Hogar/Decoración', color: '#d97706', icon: 'home' },
+      { name: 'Reparaciones', color: '#374151', icon: 'tool' },
+      { name: 'Jardinería', color: '#16a34a', icon: 'flower' },
+      
+      // Personal Care
+      { name: 'Cuidado Personal', color: '#be185d', icon: 'user' },
+      { name: 'Farmacia', color: '#dc2626', icon: 'pill' },
+      { name: 'Gimnasio/Deporte', color: '#ea580c', icon: 'activity' },
+      
+      // Education & Professional
+      { name: 'Educación', color: '#1d4ed8', icon: 'book' },
+      { name: 'Trabajo/Oficina', color: '#6b7280', icon: 'briefcase' },
+      
+      // Others
+      { name: 'Mascotas', color: '#f59e0b', icon: 'heart' },
+      { name: 'Regalos', color: '#ec4899', icon: 'gift' },
+      { name: 'Viajes', color: '#0ea5e9', icon: 'plane' },
+      { name: 'Otros', color: '#64748b', icon: 'more-horizontal' }
+    ];
+
+    const insertCategory = db.prepare(`
+      INSERT OR IGNORE INTO categories (user_id, name, color, icon) VALUES (?, ?, ?, ?)
+    `);
+
+    defaultCategories.forEach(category => {
+      insertCategory.run([userId, category.name, category.color, category.icon]);
+    });
+
+    insertCategory.finalize();
+    console.log(`[${new Date().toISOString()}] Categorías por defecto agregadas para el usuario ${userId}`);
+  }
 
   // Insertar plantillas de email por defecto
   const defaultTemplates = [

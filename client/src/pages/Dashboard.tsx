@@ -11,6 +11,8 @@ const Dashboard: React.FC = () => {
   const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
   const [stats, setStats] = useState<ExpenseStats | null>(null);
   const [currencyStats, setCurrencyStats] = useState<any>(null);
+  const [weeklyStats, setWeeklyStats] = useState<any>(null);
+  const [recurringStats, setRecurringStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,15 +21,34 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [expensesResponse, statsResponse, currencyResponse] = await Promise.all([
+      // Get this week's date range
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      const [expensesResponse, statsResponse, currencyResponse, weeklyResponse] = await Promise.all([
         api.get('/expenses?limit=5'),
         api.get('/expenses/stats/summary'),
-        api.get('/expenses/stats/currency-summary')
+        api.get('/expenses/stats/currency-summary'),
+        api.get(`/expenses/stats/summary?startDate=${startOfWeek.toISOString().split('T')[0]}&endDate=${endOfWeek.toISOString().split('T')[0]}`)
       ]);
 
       setRecentExpenses(expensesResponse.data.expenses);
       setStats(statsResponse.data);
       setCurrencyStats(currencyResponse.data);
+      setWeeklyStats(weeklyResponse.data);
+
+      // Get recurring expenses count
+      try {
+        const recurringResponse = await api.get('/expenses?limit=1000');
+        const recurringCount = recurringResponse.data.expenses.filter((expense: any) => expense.is_recurring).length;
+        setRecurringStats({ count: recurringCount });
+      } catch (error) {
+        console.error('Error fetching recurring stats:', error);
+        setRecurringStats({ count: 0 });
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -45,8 +66,9 @@ const Dashboard: React.FC = () => {
 
   const totalAmount = stats?.totalStats.total_amount || 0;
   const totalExpenses = stats?.totalStats.total_expenses || 0;
-  const avgAmount = stats?.totalStats.avg_amount || 0;
+  const weeklyAmount = weeklyStats?.totalStats.total_amount_cop || weeklyStats?.totalStats.total_amount || 0;
   const totalAmountCOP = currencyStats?.totalStats.total_amount_cop || 0;
+  const recurringCount = recurringStats?.count || 0;
 
   return (
     <div className="space-y-6">
@@ -84,9 +106,9 @@ const Dashboard: React.FC = () => {
               <FiCalendar className="w-6 h-6 text-warning-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Promedio</p>
+              <p className="text-sm font-medium text-gray-600">Esta Semana</p>
               <p className="text-2xl font-bold text-gray-900">
-                ${avgAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                ${weeklyAmount.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
               </p>
             </div>
           </div>
@@ -95,12 +117,12 @@ const Dashboard: React.FC = () => {
         <div className="card">
           <div className="flex items-center">
             <div className="p-2 bg-indigo-100 rounded-lg">
-              <FiDollarSign className="w-6 h-6 text-indigo-600" />
+              <FiTrendingUp className="w-6 h-6 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monedas Usadas</p>
+              <p className="text-sm font-medium text-gray-600">Gastos Recurrentes</p>
               <p className="text-2xl font-bold text-gray-900">
-                {currencyStats?.currencyStats?.length || 0}
+                {recurringCount}
               </p>
             </div>
           </div>

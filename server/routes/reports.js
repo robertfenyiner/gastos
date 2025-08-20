@@ -20,6 +20,12 @@ router.post('/generate', authMiddleware, async (req, res) => {
       includeCharts = true
     } = req.body;
 
+    // Ensure reports directory exists
+    const reportsDir = path.join(__dirname, '../reports');
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    }
+
     const options = {
       startDate,
       endDate,

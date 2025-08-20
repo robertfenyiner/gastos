@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiTag } from 'react-icons/fi';
+import { 
+  FiPlus, FiEdit, FiTrash2, FiTag, FiHome, FiCar, FiHeart, FiBook, FiMusic, 
+  FiFilm, FiCoffee, FiGift, FiBriefcase, FiMail, FiPhone, FiWifi, FiTv, 
+  FiShoppingCart, FiZap, FiDroplet, FiActivity, FiCreditCard, FiShield, 
+  FiTrendingUp, FiTool, FiUser, FiStar, FiPackage, FiMoreHorizontal 
+} from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
@@ -36,10 +41,12 @@ const Categories: React.FC = () => {
     '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
   ];
 
-  // Predefined icons (simplified for this example)
+  // Predefined icons with proper mapping
   const iconOptions = [
-    'shopping-cart', 'home', 'car', 'utensils', 'heart', 'book',
-    'music', 'film', 'coffee', 'gift', 'briefcase', 'plane'
+    'shopping-cart', 'home', 'car', 'heart', 'book', 'music', 'film', 'coffee', 'gift', 
+    'briefcase', 'mail', 'phone', 'wifi', 'tv', 'zap', 'droplet', 'activity', 
+    'credit-card', 'shield', 'trending-up', 'tool', 'user', 'star', 'package',
+    'more-horizontal', 'tag'
   ];
 
   useEffect(() => {
@@ -164,8 +171,43 @@ const Categories: React.FC = () => {
   };
 
   const getIconComponent = (iconName: string) => {
-    // For simplicity, return a tag icon for all. In a real app, you'd map to actual icons
-    return <FiTag className="w-5 h-5" />;
+    const iconMap: { [key: string]: React.ReactElement } = {
+      'shopping-cart': <FiShoppingCart className="w-5 h-5" />,
+      'home': <FiHome className="w-5 h-5" />,
+      'car': <FiCar className="w-5 h-5" />,
+      'heart': <FiHeart className="w-5 h-5" />,
+      'book': <FiBook className="w-5 h-5" />,
+      'music': <FiMusic className="w-5 h-5" />,
+      'film': <FiFilm className="w-5 h-5" />,
+      'coffee': <FiCoffee className="w-5 h-5" />,
+      'gift': <FiGift className="w-5 h-5" />,
+      'briefcase': <FiBriefcase className="w-5 h-5" />,
+      'mail': <FiMail className="w-5 h-5" />,
+      'phone': <FiPhone className="w-5 h-5" />,
+      'wifi': <FiWifi className="w-5 h-5" />,
+      'tv': <FiTv className="w-5 h-5" />,
+      'zap': <FiZap className="w-5 h-5" />,
+      'droplet': <FiDroplet className="w-5 h-5" />,
+      'activity': <FiActivity className="w-5 h-5" />,
+      'credit-card': <FiCreditCard className="w-5 h-5" />,
+      'shield': <FiShield className="w-5 h-5" />,
+      'trending-up': <FiTrendingUp className="w-5 h-5" />,
+      'tool': <FiTool className="w-5 h-5" />,
+      'user': <FiUser className="w-5 h-5" />,
+      'star': <FiStar className="w-5 h-5" />,
+      'package': <FiPackage className="w-5 h-5" />,
+      'more-horizontal': <FiMoreHorizontal className="w-5 h-5" />,
+      'tag': <FiTag className="w-5 h-5" />,
+      // Additional mappings for backward compatibility and new icons
+      'utensils': <FiCoffee className="w-5 h-5" />, // Close approximation
+      'plane': <FiPackage className="w-5 h-5" />, // Close approximation
+      'flower': <FiHeart className="w-5 h-5" />, // Close approximation
+      'pill': <FiHeart className="w-5 h-5" />, // Close approximation
+      'flame': <FiZap className="w-5 h-5" />, // Close approximation
+      'play': <FiFilm className="w-5 h-5" /> // Close approximation
+    };
+
+    return iconMap[iconName] || <FiTag className="w-5 h-5" />;
   };
 
   if (loading) {

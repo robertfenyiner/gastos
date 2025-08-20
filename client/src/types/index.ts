@@ -40,6 +40,7 @@ export interface Expense {
   is_recurring: boolean;
   recurring_frequency?: string;
   next_due_date?: string;
+  reminder_days_advance?: number;
   created_at: string;
   updated_at: string;
   category_name: string;
