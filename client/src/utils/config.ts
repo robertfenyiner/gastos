@@ -1,6 +1,10 @@
 // Configuración centralizada para URLs
 export const getApiBaseUrl = (): string => {
-  return process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  // TEMPORAL: Hardcodeado para depuración  
+  const apiUrl = 'http://5.189.146.163';
+  console.log('[CONFIG] API Base URL (hardcoded):', apiUrl);
+  console.log('[CONFIG] Environment variable REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+  return apiUrl;
 };
 
 export const getFileUrl = (path: string): string => {
