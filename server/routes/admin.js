@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
@@ -117,6 +118,166 @@ router.delete('/users/:id', authMiddleware, adminMiddleware, (req, res) => {
       });
     });
   });
+});
+
+// Create new user (admin only)
+router.post('/users', authMiddleware, adminMiddleware, async (req, res) => {
+  const { username, email, password, isAdmin = false } = req.body;
+
+  // Validation
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+  }
+
+  if (username.length < 3) {
+    return res.status(400).json({ message: 'El nombre de usuario debe tener al menos 3 caracteres' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+  }
+
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ message: 'El email no es válido' });
+  }
+
+  try {
+    // Check if username or email already exists
+    const existingUser = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'El nombre de usuario o email ya existe' });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Create user
+    db.run(
+      'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
+      [username, email, passwordHash, isAdmin ? 1 : 0],
+      function(err) {
+        if (err) {
+          console.error('Error creating user:', err);
+          return res.status(500).json({ message: 'Error al crear el usuario' });
+        }
+
+        res.status(201).json({
+          message: 'Usuario creado correctamente',
+          userId: this.lastID,
+          username: username
+        });
+      }
+    );
+
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Error al crear el usuario' });
+  }
+});
+
+// Update user (admin only)
+router.put('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  const userId = req.params.id;
+  const { username, email, password, isAdmin } = req.body;
+
+  // Validation
+  if (!username || !email) {
+    return res.status(400).json({ message: 'Nombre de usuario y email son obligatorios' });
+  }
+
+  if (username.length < 3) {
+    return res.status(400).json({ message: 'El nombre de usuario debe tener al menos 3 caracteres' });
+  }
+
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ message: 'El email no es válido' });
+  }
+
+  if (password && password.length < 6) {
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+  }
+
+  try {
+    // Check if username or email already exists (excluding current user)
+    const existingUser = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?', [username, email, userId], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'El nombre de usuario o email ya existe' });
+    }
+
+    let updateQuery = 'UPDATE users SET username = ?, email = ?, is_admin = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    let updateParams = [username, email, isAdmin ? 1 : 0, userId];
+
+    // If password is provided, hash it and include in update
+    if (password) {
+      const passwordHash = await bcrypt.hash(password, 12);
+      updateQuery = 'UPDATE users SET username = ?, email = ?, password_hash = ?, is_admin = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+      updateParams = [username, email, passwordHash, isAdmin ? 1 : 0, userId];
+    }
+
+    db.run(updateQuery, updateParams, function(err) {
+      if (err) {
+        console.error('Error updating user:', err);
+        return res.status(500).json({ message: 'Error al actualizar el usuario' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      res.json({
+        message: 'Usuario actualizado correctamente',
+        userId: userId
+      });
+    });
+
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Error al actualizar el usuario' });
+  }
+});
+
+// Toggle user admin status (admin only)
+router.patch('/users/:id/admin', authMiddleware, adminMiddleware, (req, res) => {
+  const userId = req.params.id;
+  const adminId = req.user.id;
+  const { isAdmin } = req.body;
+
+  // Prevent admin from removing their own admin status
+  if (parseInt(userId) === adminId && !isAdmin) {
+    return res.status(400).json({ message: 'No puedes quitar tus propios permisos de administrador' });
+  }
+
+  db.run(
+    'UPDATE users SET is_admin = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [isAdmin ? 1 : 0, userId],
+    function(err) {
+      if (err) {
+        console.error('Error updating user admin status:', err);
+        return res.status(500).json({ message: 'Error al actualizar permisos' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      res.json({
+        message: `Permisos de administrador ${isAdmin ? 'otorgados' : 'removidos'} correctamente`,
+        userId: userId
+      });
+    }
+  );
 });
 
 // Get system statistics (admin only)

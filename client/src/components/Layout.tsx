@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { getInitials } from '../utils/format';
+import ThemeToggle from './ThemeToggle';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,11 +39,11 @@ const Layout: React.FC = () => {
   const isCurrentPath = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-300">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -50,17 +51,17 @@ const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed z-30 inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+          fixed z-30 inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:static lg:inset-0 lg:translate-x-0 lg:shadow-none
         `}
         style={{ height: '100vh' }}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          <h1 className="text-lg lg:text-xl font-bold text-gray-900 truncate">Gastos Robert</h1>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+          <h1 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-gray-100 truncate">Gastos Robert</h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+            className="lg:hidden p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <FiX className="w-6 h-6" />
           </button>
@@ -78,8 +79,8 @@ const Layout: React.FC = () => {
                     className={`
                       flex flex-row items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200
                       ${isCurrentPath(item.href)
-                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 border-r-2 border-primary-600 dark:border-primary-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }
                     `}
                   >
@@ -93,19 +94,19 @@ const Layout: React.FC = () => {
         </nav>
 
         {/* User info and logout */}
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
+        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center mb-4">
             <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white text-base font-bold">
               {user ? getInitials(user.username) : 'U'}
             </div>
             <div className="hidden lg:block ml-3">
-              <p className="text-sm font-medium text-gray-900">{user?.username}</p>
-              <p className="text-xs text-gray-500">{user?.email}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user?.username}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
           >
             <FiLogOut className="w-5 h-5 mr-3" />
             <span>Cerrar sesión</span>
@@ -116,25 +117,26 @@ const Layout: React.FC = () => {
       {/* Main content */}
       <div className="flex-1 flex flex-col lg:ml-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+              className="lg:hidden p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <FiMenu className="w-6 h-6" />
             </button>
 
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {navigation.find(item => isCurrentPath(item.href))?.name || 'Panel'}
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4 lg:hidden">
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+            <div className="flex items-center space-x-4">
+              <ThemeToggle className="hidden sm:block" />
+              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium lg:hidden">
                 {user ? getInitials(user.username) : 'U'}
               </div>
             </div>

@@ -243,8 +243,8 @@ const Expenses: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gastos</h1>
-          <p className="text-gray-600">Gestiona tus gastos y controla tu presupuesto</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Gastos</h1>
+          <p className="text-gray-600 dark:text-gray-400">Gestiona tus gastos y controla tu presupuesto</p>
         </div>
         <button
           onClick={() => {
@@ -260,10 +260,10 @@ const Expenses: React.FC = () => {
       </div>
 
       {/* Filters and Sort */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Filtrar por categoría
             </label>
             <select
@@ -276,7 +276,7 @@ const Expenses: React.FC = () => {
             >
               <option value="">Todas las categorías</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.name}>
+                <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
@@ -284,7 +284,7 @@ const Expenses: React.FC = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Ordenar por
             </label>
             <select
@@ -300,7 +300,7 @@ const Expenses: React.FC = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Orden
             </label>
             <select
@@ -316,12 +316,12 @@ const Expenses: React.FC = () => {
       </div>
 
       {/* Expenses List */}
-      <div className="bg-white shadow-sm rounded-lg border">
+      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
         {expenses.length === 0 ? (
           <div className="text-center py-12">
             <FiDollarSign className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No se encontraron gastos</h3>
-            <p className="mt-2 text-gray-500">Comienza agregando tu primer gasto.</p>
+            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">No se encontraron gastos</h3>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">Comienza agregando tu primer gasto.</p>
             <button
               onClick={() => {
                 setEditingExpense(null);
@@ -335,63 +335,146 @@ const Expenses: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Descripción
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {expenses.map((expense) => (
-                  <tr key={expense.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Descripción
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Monto
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Categoría
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Fecha
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {expenses.map((expense) => (
+                    <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {expense.description}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <AmountDisplay
+                          amount={expense.amount}
+                          currencySymbol={expense.currency_symbol}
+                          currencyCode={expense.currency_code}
+                          amountCOP={expense.amount_cop}
+                          exchangeRate={expense.exchange_rate}
+                          className="text-sm"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: sanitizeColor(expense.category_color) }}
+                          />
+                          <span className="text-sm text-gray-900 dark:text-gray-100">
+                            {expense.category_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {formatDate(expense.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {expense.is_recurring ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Recurrente
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Único
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(expense)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          title="Editar gasto"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(expense.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Eliminar gasto"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {expenses.map((expense) => (
+                <div key={expense.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                         {expense.description}
+                      </h3>
+                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <div
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: sanitizeColor(expense.category_color) }}
+                        />
+                        <span>{expense.category_name}</span>
+                        <span className="mx-2">•</span>
+                        <span>{formatDate(expense.date)}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </div>
+                    <div className="flex space-x-2 ml-2">
+                      <button
+                        onClick={() => handleEdit(expense)}
+                        className="text-blue-600 hover:text-blue-900 p-1"
+                        title="Editar gasto"
+                      >
+                        <FiEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(expense.id)}
+                        className="text-red-600 hover:text-red-900 p-1"
+                        title="Eliminar gasto"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
                       <AmountDisplay
                         amount={expense.amount}
                         currencySymbol={expense.currency_symbol}
                         currencyCode={expense.currency_code}
                         amountCOP={expense.amount_cop}
                         exchangeRate={expense.exchange_rate}
-                        className="text-sm"
+                        className="text-base font-semibold"
                       />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div
-                          className="w-3 h-3 rounded-full mr-2"
-                          style={{ backgroundColor: sanitizeColor(expense.category_color) }}
-                        />
-                        <span className="text-sm text-gray-900">
-                          {expense.category_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(expense.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </div>
+                    <div>
                       {expense.is_recurring ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           Recurrente
@@ -401,49 +484,33 @@ const Expenses: React.FC = () => {
                           Único
                         </span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(expense)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                        title="Editar gasto"
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Eliminar gasto"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
                 Página {currentPage} de {totalPages}
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   Siguiente
                 </button>
@@ -456,9 +523,9 @@ const Expenses: React.FC = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-screen overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-screen overflow-y-auto">
             <div className="p-6">
-              <h3 className="text-lg font-medium mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                 {editingExpense ? 'Editar gasto' : 'Agregar nuevo gasto'}
               </h3>
 
@@ -470,7 +537,7 @@ const Expenses: React.FC = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Descripción *
                   </label>
                   <input
@@ -486,7 +553,7 @@ const Expenses: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Monto *
                   </label>
                   <input
@@ -503,7 +570,7 @@ const Expenses: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Fecha *
                   </label>
                   <input
@@ -518,7 +585,7 @@ const Expenses: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Categoría *
                   </label>
                   <select
@@ -539,7 +606,7 @@ const Expenses: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Moneda *
                   </label>
                   <select
@@ -567,14 +634,14 @@ const Expenses: React.FC = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, is_recurring: e.target.checked }))}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700">Gasto recurrente</span>
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Gasto recurrente</span>
                   </label>
                 </div>
 
                 {formData.is_recurring && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Frecuencia
                       </label>
                       <select
@@ -590,7 +657,7 @@ const Expenses: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Días de anticipación para recordatorio
                       </label>
                       <select
@@ -602,7 +669,7 @@ const Expenses: React.FC = () => {
                         <option value={2}>2 días antes</option>
                         <option value={3}>3 días antes</option>
                       </select>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Se enviará un recordatorio por correo electrónico con la anticipación seleccionada
                       </p>
                     </div>
@@ -617,7 +684,7 @@ const Expenses: React.FC = () => {
                       setEditingExpense(null);
                       resetForm();
                     }}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
                   >
                     Cancelar
                   </button>

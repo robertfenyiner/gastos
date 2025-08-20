@@ -170,6 +170,64 @@ router.put('/:id', authMiddleware, (req, res) => {
   });
 });
 
+// Remove duplicate categories
+router.post('/remove-duplicates', authMiddleware, (req, res) => {
+  const userId = req.user.id;
+
+  // Find duplicates by name
+  const findDuplicatesQuery = `
+    SELECT name, MIN(id) as keep_id, GROUP_CONCAT(id) as all_ids, COUNT(*) as count
+    FROM categories 
+    WHERE user_id = ? 
+    GROUP BY name 
+    HAVING COUNT(*) > 1
+  `;
+
+  db.all(findDuplicatesQuery, [userId], (err, duplicates) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error de base de datos' });
+    }
+
+    if (duplicates.length === 0) {
+      return res.json({ message: 'No se encontraron categorías duplicadas', removed: 0 });
+    }
+
+    let removedCount = 0;
+    let promises = [];
+
+    duplicates.forEach(duplicate => {
+      const allIds = duplicate.all_ids.split(',');
+      const idsToRemove = allIds.filter(id => id !== duplicate.keep_id.toString());
+      
+      idsToRemove.forEach(id => {
+        promises.push(new Promise((resolve, reject) => {
+          db.run('DELETE FROM categories WHERE id = ? AND user_id = ?', [id, userId], function(err) {
+            if (err) {
+              reject(err);
+            } else {
+              removedCount += this.changes;
+              resolve();
+            }
+          });
+        }));
+      });
+    });
+
+    Promise.all(promises)
+      .then(() => {
+        res.json({ 
+          message: `Se eliminaron ${removedCount} categorías duplicadas`,
+          removed: removedCount,
+          duplicates: duplicates.map(d => ({ name: d.name, count: d.count }))
+        });
+      })
+      .catch(err => {
+        console.error('Error removing duplicates:', err);
+        res.status(500).json({ message: 'Error al eliminar duplicados' });
+      });
+  });
+});
+
 // Delete category
 router.delete('/:id', authMiddleware, (req, res) => {
   const userId = req.user.id;

@@ -200,6 +200,18 @@ db.serialize(() => {
 
   // Function to add default categories
   function addDefaultCategories(userId) {
+    // Verificar si ya existen categorías para este usuario
+    db.get('SELECT COUNT(*) as count FROM categories WHERE user_id = ?', [userId], (err, result) => {
+      if (err) {
+        console.error('Error checking existing categories:', err);
+        return;
+      }
+      
+      if (result.count > 0) {
+        console.log(`[${new Date().toISOString()}] Usuario ${userId} ya tiene ${result.count} categorías, saltando creación por defecto`);
+        return;
+      }
+
     const defaultCategories = [
       // Categorías Básicas
       { name: 'Alimentación', color: '#10b981', icon: 'coffee' },
@@ -263,6 +275,7 @@ db.serialize(() => {
 
     insertCategory.finalize();
     console.log(`[${new Date().toISOString()}] Categorías por defecto agregadas para el usuario ${userId}`);
+    });
   }
 
   // Insertar plantillas de email por defecto

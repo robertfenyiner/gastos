@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase } from 'react-icons/fi';
+import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase, FiPlus, FiEdit, FiShield } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmailTemplateEditor from '../components/EmailTemplateEditor';
@@ -40,6 +40,15 @@ const Admin: React.FC = () => {
   const [userSearch, setUserSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [userFormData, setUserFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    isAdmin: false
+  });
+  const [userFormErrors, setUserFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user?.is_admin) {
@@ -97,6 +106,102 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleCreateUser = () => {
+    setEditingUser(null);
+    setUserFormData({
+      username: '',
+      email: '',
+      password: '',
+      isAdmin: false
+    });
+    setUserFormErrors({});
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (userData: User) => {
+    setEditingUser(userData);
+    setUserFormData({
+      username: userData.username,
+      email: userData.email,
+      password: '',
+      isAdmin: userData.is_admin
+    });
+    setUserFormErrors({});
+    setShowUserModal(true);
+  };
+
+  const validateUserForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!userFormData.username.trim()) {
+      errors.username = 'El nombre de usuario es obligatorio';
+    } else if (userFormData.username.length < 3) {
+      errors.username = 'El nombre de usuario debe tener al menos 3 caracteres';
+    }
+
+    if (!userFormData.email.trim()) {
+      errors.email = 'El email es obligatorio';
+    } else if (!/\S+@\S+\.\S+/.test(userFormData.email)) {
+      errors.email = 'El email no es válido';
+    }
+
+    if (!editingUser && !userFormData.password) {
+      errors.password = 'La contraseña es obligatoria';
+    } else if (userFormData.password && userFormData.password.length < 6) {
+      errors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+
+    setUserFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateUserForm()) {
+      return;
+    }
+
+    try {
+      const submitData = {
+        username: userFormData.username.trim(),
+        email: userFormData.email.trim(),
+        isAdmin: userFormData.isAdmin,
+        ...(userFormData.password && { password: userFormData.password })
+      };
+
+      if (editingUser) {
+        await api.put(`/admin/users/${editingUser.id}`, submitData);
+      } else {
+        await api.post('/admin/users', submitData);
+      }
+
+      setShowUserModal(false);
+      loadUsers();
+      loadDashboardData(); // Refresh stats
+    } catch (error: any) {
+      setUserFormErrors({
+        submit: error.response?.data?.message || 'Error al guardar el usuario'
+      });
+    }
+  };
+
+  const toggleUserAdmin = async (userId: number, currentAdminStatus: boolean) => {
+    if (!window.confirm(`¿Estás seguro de que deseas ${currentAdminStatus ? 'quitar' : 'otorgar'} permisos de administrador?`)) {
+      return;
+    }
+
+    try {
+      await api.patch(`/admin/users/${userId}/admin`, {
+        isAdmin: !currentAdminStatus
+      });
+      loadUsers();
+      loadDashboardData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error al actualizar permisos');
+    }
+  };
+
   const deleteUser = async (userId: number, username: string) => {
     if (!window.confirm(`¿Estás seguro de que deseas eliminar el usuario "${username}"? Esta acción no se puede deshacer.`)) {
       return;
@@ -105,6 +210,7 @@ const Admin: React.FC = () => {
     try {
       await api.delete(`/admin/users/${userId}`);
       loadUsers();
+      loadDashboardData(); // Refresh stats
     } catch (error: any) {
       alert(error.response?.data?.message || 'Error al eliminar el usuario');
     }
@@ -281,7 +387,7 @@ const Admin: React.FC = () => {
 
       {activeTab === 'users' && (
         <div className="space-y-4">
-          {/* Search */}
+          {/* Search and Actions */}
           <div className="flex justify-between items-center">
             <input
               type="text"
@@ -290,6 +396,13 @@ const Admin: React.FC = () => {
               onChange={(e) => setUserSearch(e.target.value)}
               className="input-field max-w-md"
             />
+            <button
+              onClick={handleCreateUser}
+              className="btn-primary flex items-center"
+            >
+              <FiPlus className="w-4 h-4 mr-2" />
+              Crear Usuario
+            </button>
           </div>
 
           {/* Users Table */}
@@ -350,15 +463,31 @@ const Admin: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {!userData.is_admin && (
+                      <div className="flex justify-end space-x-2">
                         <button
-                          onClick={() => deleteUser(userData.id, userData.username)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Eliminar usuario"
+                          onClick={() => handleEditUser(userData)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Editar usuario"
                         >
-                          <FiTrash2 className="w-4 h-4" />
+                          <FiEdit className="w-4 h-4" />
                         </button>
-                      )}
+                        <button
+                          onClick={() => toggleUserAdmin(userData.id, userData.is_admin)}
+                          className={userData.is_admin ? "text-orange-600 hover:text-orange-900" : "text-green-600 hover:text-green-900"}
+                          title={userData.is_admin ? "Quitar permisos de admin" : "Hacer admin"}
+                        >
+                          <FiShield className="w-4 h-4" />
+                        </button>
+                        {!userData.is_admin && (
+                          <button
+                            onClick={() => deleteUser(userData.id, userData.username)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Eliminar usuario"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -484,6 +613,107 @@ const Admin: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* User Modal */}
+      {showUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-medium mb-4">
+                {editingUser ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+              </h3>
+
+              {userFormErrors.submit && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                  {userFormErrors.submit}
+                </div>
+              )}
+
+              <form onSubmit={handleUserSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre de usuario *
+                  </label>
+                  <input
+                    type="text"
+                    value={userFormData.username}
+                    onChange={(e) => setUserFormData(prev => ({ ...prev, username: e.target.value }))}
+                    className={`input-field ${userFormErrors.username ? 'border-red-300' : ''}`}
+                    placeholder="Nombre de usuario"
+                  />
+                  {userFormErrors.username && (
+                    <p className="mt-1 text-sm text-red-600">{userFormErrors.username}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={userFormData.email}
+                    onChange={(e) => setUserFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className={`input-field ${userFormErrors.email ? 'border-red-300' : ''}`}
+                    placeholder="email@ejemplo.com"
+                  />
+                  {userFormErrors.email && (
+                    <p className="mt-1 text-sm text-red-600">{userFormErrors.email}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contraseña {editingUser ? '(dejar vacío para no cambiar)' : '*'}
+                  </label>
+                  <input
+                    type="password"
+                    value={userFormData.password}
+                    onChange={(e) => setUserFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className={`input-field ${userFormErrors.password ? 'border-red-300' : ''}`}
+                    placeholder="Contraseña"
+                  />
+                  {userFormErrors.password && (
+                    <p className="mt-1 text-sm text-red-600">{userFormErrors.password}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={userFormData.isAdmin}
+                      onChange={(e) => setUserFormData(prev => ({ ...prev, isAdmin: e.target.checked }))}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Permisos de administrador</span>
+                  </label>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserModal(false);
+                      setEditingUser(null);
+                      setUserFormErrors({});
+                    }}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 btn-primary"
+                  >
+                    {editingUser ? 'Actualizar' : 'Crear'} Usuario
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
