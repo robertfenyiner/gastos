@@ -31,6 +31,7 @@ const parseUserSafely = (userStr: string): User | null => {
       id: parsed.id,
       username: parsed.username.trim(),
       email: parsed.email.trim().toLowerCase(),
+      is_admin: parsed.is_admin || false,
       created_at: parsed.created_at || null,
       updated_at: parsed.updated_at || null
     };
@@ -68,7 +69,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await api.get('/auth/me');
       if (response.data?.user) {
-        setUser(response.data.user);
+        const updatedUser = {
+          id: response.data.user.id,
+          username: response.data.user.username?.trim() || '',
+          email: response.data.user.email?.trim().toLowerCase() || '',
+          is_admin: response.data.user.is_admin || false,
+          created_at: response.data.user.created_at || null,
+          updated_at: response.data.user.updated_at || null
+        };
+        setUser(updatedUser);
+        // Update localStorage with the verified user data
+        localStorage.setItem('user', JSON.stringify(updatedUser));
       } else {
         throw new Error('Invalid user data from server');
       }
@@ -128,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: newUser.id,
         username: newUser.username?.trim() || '',
         email: newUser.email?.trim().toLowerCase() || '',
+        is_admin: newUser.is_admin || false,
         created_at: newUser.created_at || null,
         updated_at: newUser.updated_at || null
       };
@@ -165,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: newUser.id,
         username: newUser.username?.trim() || '',
         email: newUser.email?.trim().toLowerCase() || '',
+        is_admin: newUser.is_admin || false,
         created_at: newUser.created_at || null,
         updated_at: newUser.updated_at || null
       };
