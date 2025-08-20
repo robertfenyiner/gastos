@@ -145,6 +145,7 @@ router.post('/test-profile', profileUpload.single('profilePicture'), async (req,
 
 // Upload profile picture
 router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), async (req, res) => {
+  console.log(`[PROFILE_UPLOAD] Inicio de procesamiento de subida`);
   try {
     const userId = req.user.id;
     console.log(`[PROFILE_UPLOAD] Usuario ${userId} subiendo foto de perfil`);
@@ -262,23 +263,24 @@ router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), 
   }
 });
 
-// Download profile picture by filename (public endpoint with user verification)
-router.get('/profile/:filename', authMiddleware, async (req, res) => {
+// Download profile picture by filename (public endpoint - profile pictures are not sensitive)
+router.get('/profile/:filename', async (req, res) => {
   try {
     const filename = req.params.filename;
-    const userId = req.user.id;
+    console.log(`[PROFILE_GET] Solicitando foto de perfil: ${filename}`);
 
-    // Verify this profile picture belongs to the current user or user is admin
-    const userCheck = await new Promise((resolve, reject) => {
-      db.get('SELECT id FROM users WHERE (id = ? OR ?) AND profile_picture = ?', 
-        [userId, req.user.is_admin, filename], (err, row) => {
+    // Verificar que el archivo existe en la base de datos (sin verificación de usuario)
+    const fileExists = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM file_attachments WHERE file_name = ? AND file_type = "profile"', 
+        [filename], (err, row) => {
         if (err) reject(err);
         else resolve(row);
       });
     });
 
-    if (!userCheck) {
-      return res.status(403).json({ message: 'No tienes permisos para acceder a esta imagen' });
+    if (!fileExists) {
+      console.log(`[PROFILE_GET] Archivo no encontrado en BD: ${filename}`);
+      return res.status(404).json({ message: 'Imagen no encontrada' });
     }
 
     // Get file information from database
@@ -302,10 +304,14 @@ router.get('/profile/:filename', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Archivo físico no encontrado' });
     }
 
-    // Set appropriate headers for image
+    // Set appropriate headers for image with CORS
     res.setHeader('Content-Type', fileRecord.mime_type);
     res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
     res.setHeader('Content-Length', fileRecord.file_size);
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS for profile pictures
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    
+    console.log(`[PROFILE_GET] Sirviendo archivo: ${fileRecord.file_path}`);
 
     // Stream file
     const fileStream = fsSync.createReadStream(fileRecord.file_path);
