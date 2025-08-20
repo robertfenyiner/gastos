@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiCalendar, FiDollarSign, FiTag, FiPaperclip, FiDownload, FiX, FiEye } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiCalendar, FiDollarSign, FiTag, FiPaperclip, FiDownload, FiX, FiEye, FiMaximize2, FiExternalLink, FiImage, FiFile } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AmountDisplay from '../components/AmountDisplay';
+import AuthenticatedImage from '../components/AuthenticatedImage';
+import AuthenticatedPDF from '../components/AuthenticatedPDF';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import { getExpenseFileUrl } from '../utils/config';
@@ -69,6 +71,8 @@ const Expenses: React.FC = () => {
   const [expenseFiles, setExpenseFiles] = useState<any[]>([]);
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [viewingExpenseId, setViewingExpenseId] = useState<number | null>(null);
+  const [previewFile, setPreviewFile] = useState<any | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -324,6 +328,11 @@ const Expenses: React.FC = () => {
     } catch (error) {
       console.error('Error downloading file:', error);
     }
+  };
+
+  const openPreview = async (file: any) => {
+    setPreviewFile(file);
+    setShowPreviewModal(true);
   };
 
   const deleteExpenseFile = async (fileId: number) => {
@@ -912,17 +921,17 @@ const Expenses: React.FC = () => {
                       <div className="flex items-center flex-1">
                         <div className="flex-shrink-0">
                           {file.isImage ? (
-                            <img
-                              src={getExpenseFileUrl(file.id)}
+                            <AuthenticatedImage
+                              src={`/files/download/${file.id}`}
                               alt={file.originalName}
-                              className="w-10 h-10 object-cover rounded"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                              }}
+                              className="w-10 h-10 object-cover rounded cursor-pointer hover:opacity-80"
+                              fallbackIcon={FiPaperclip}
                             />
-                          ) : null}
-                          <FiPaperclip className={`w-10 h-10 text-gray-400 ${file.isImage ? 'hidden' : ''}`} />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
+                              <FiPaperclip className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            </div>
+                          )}
                         </div>
                         <div className="ml-3 flex-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -934,6 +943,15 @@ const Expenses: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 ml-3">
+                        {(file.isImage || file.mimeType === 'application/pdf') && (
+                          <button
+                            onClick={() => openPreview(file)}
+                            className="text-purple-600 hover:text-purple-900 p-1"
+                            title="Previsualizar"
+                          >
+                            <FiEye className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => downloadFile(file.id, file.originalName)}
                           className="text-blue-600 hover:text-blue-900 p-1"
@@ -962,6 +980,75 @@ const Expenses: React.FC = () => {
                   Cerrar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Previsualización */}
+      {showPreviewModal && previewFile && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full h-full max-h-screen overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                {previewFile.originalName}
+              </h3>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => downloadFile(previewFile.id, previewFile.originalName)}
+                  className="text-blue-600 hover:text-blue-900 p-2"
+                  title="Descargar"
+                >
+                  <FiDownload className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2"
+                  title="Cerrar"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-hidden h-full" style={{ height: 'calc(100% - 72px)' }}>
+              {previewFile.isImage ? (
+                <div className="h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+                  <AuthenticatedImage
+                    src={`/files/download/${previewFile.id}`}
+                    alt={previewFile.originalName}
+                    className="max-w-full max-h-full object-contain"
+                    fallbackIcon={FiImage}
+                  />
+                </div>
+              ) : previewFile.mimeType === 'application/pdf' ? (
+                <div className="h-full">
+                  <AuthenticatedPDF
+                    src={`/files/download/${previewFile.id}`}
+                    className="w-full h-full border-0"
+                    title={previewFile.originalName}
+                  />
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <FiFile className="mx-auto h-24 w-24 text-gray-400" />
+                    <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+                      Vista previa no disponible
+                    </h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">
+                      Este tipo de archivo no se puede previsualizar. Puedes descargarlo para abrirlo.
+                    </p>
+                    <button
+                      onClick={() => downloadFile(previewFile.id, previewFile.originalName)}
+                      className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      <FiDownload className="w-4 h-4 mr-2" />
+                      Descargar archivo
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

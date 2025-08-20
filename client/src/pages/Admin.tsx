@@ -3,8 +3,9 @@ import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase, FiPlus, 
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmailTemplateEditor from '../components/EmailTemplateEditor';
+import AuthenticatedImage from '../components/AuthenticatedImage';
 import api from '../utils/api';
-import { getFileUrl } from '../utils/config';
+import { getFileUrl, getProfilePictureUrl } from '../utils/config';
 
 interface User {
   id: number;
@@ -438,6 +439,7 @@ const Admin: React.FC = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading file:', error);
+      alert('Error al descargar el archivo: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -1004,11 +1006,20 @@ const Admin: React.FC = () => {
                             <div className="flex items-center">
                               <div className="flex-shrink-0 w-10 h-10">
                                 {file.isImage ? (
-                                  <img
-                                    src={getFileUrl(file.downloadUrl)}
-                                    alt={file.originalName}
-                                    className="w-10 h-10 object-cover rounded"
-                                  />
+                                  file.fileType === 'profile' ? (
+                                    <img
+                                      src={getProfilePictureUrl(file.fileName)}
+                                      alt={file.originalName}
+                                      className="w-10 h-10 object-cover rounded"
+                                    />
+                                  ) : (
+                                    <AuthenticatedImage
+                                      src={file.downloadUrl}
+                                      alt={file.originalName}
+                                      className="w-10 h-10 object-cover rounded"
+                                      fallbackIcon={FiImage}
+                                    />
+                                  )
                                 ) : (
                                   <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
                                     <FiFile className="w-5 h-5 text-gray-500 dark:text-gray-400" />
