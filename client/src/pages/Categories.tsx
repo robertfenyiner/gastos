@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FiPlus, FiEdit, FiTrash2, FiTag, FiHome, FiCar, FiHeart, FiBook, FiMusic, 
+  FiPlus, FiEdit, FiTrash2, FiTag, FiHome, FiHeart, FiBook, FiMusic, 
   FiFilm, FiCoffee, FiGift, FiBriefcase, FiMail, FiPhone, FiWifi, FiTv, 
-  FiShoppingCart, FiZap, FiDroplet, FiActivity, FiCreditCard, FiShield, 
-  FiTrendingUp, FiTool, FiUser, FiStar, FiPackage, FiMoreHorizontal 
+  FiShoppingCart, FiZap, FiActivity, FiCreditCard, FiShield, 
+  FiTrendingUp, FiTool, FiUser, FiStar, FiPackage, FiMoreHorizontal,
+  FiTruck, FiDollarSign, FiSettings, FiMonitor
 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -41,12 +42,12 @@ const Categories: React.FC = () => {
     '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
   ];
 
-  // Predefined icons with proper mapping
+  // Iconos predefinidos que existen en react-icons/fi
   const iconOptions = [
-    'shopping-cart', 'home', 'car', 'heart', 'book', 'music', 'film', 'coffee', 'gift', 
-    'briefcase', 'mail', 'phone', 'wifi', 'tv', 'zap', 'droplet', 'activity', 
+    'shopping-cart', 'home', 'truck', 'heart', 'book', 'music', 'film', 'coffee', 'gift', 
+    'briefcase', 'mail', 'phone', 'wifi', 'tv', 'zap', 'activity', 
     'credit-card', 'shield', 'trending-up', 'tool', 'user', 'star', 'package',
-    'more-horizontal', 'tag'
+    'more-horizontal', 'tag', 'dollar-sign', 'settings', 'monitor'
   ];
 
   useEffect(() => {
@@ -174,7 +175,7 @@ const Categories: React.FC = () => {
     const iconMap: { [key: string]: React.ReactElement } = {
       'shopping-cart': <FiShoppingCart className="w-5 h-5" />,
       'home': <FiHome className="w-5 h-5" />,
-      'car': <FiCar className="w-5 h-5" />,
+      'truck': <FiTruck className="w-5 h-5" />,
       'heart': <FiHeart className="w-5 h-5" />,
       'book': <FiBook className="w-5 h-5" />,
       'music': <FiMusic className="w-5 h-5" />,
@@ -187,7 +188,6 @@ const Categories: React.FC = () => {
       'wifi': <FiWifi className="w-5 h-5" />,
       'tv': <FiTv className="w-5 h-5" />,
       'zap': <FiZap className="w-5 h-5" />,
-      'droplet': <FiDroplet className="w-5 h-5" />,
       'activity': <FiActivity className="w-5 h-5" />,
       'credit-card': <FiCreditCard className="w-5 h-5" />,
       'shield': <FiShield className="w-5 h-5" />,
@@ -198,13 +198,18 @@ const Categories: React.FC = () => {
       'package': <FiPackage className="w-5 h-5" />,
       'more-horizontal': <FiMoreHorizontal className="w-5 h-5" />,
       'tag': <FiTag className="w-5 h-5" />,
-      // Additional mappings for backward compatibility and new icons
-      'utensils': <FiCoffee className="w-5 h-5" />, // Close approximation
-      'plane': <FiPackage className="w-5 h-5" />, // Close approximation
-      'flower': <FiHeart className="w-5 h-5" />, // Close approximation
-      'pill': <FiHeart className="w-5 h-5" />, // Close approximation
-      'flame': <FiZap className="w-5 h-5" />, // Close approximation
-      'play': <FiFilm className="w-5 h-5" /> // Close approximation
+      'dollar-sign': <FiDollarSign className="w-5 h-5" />,
+      'settings': <FiSettings className="w-5 h-5" />,
+      'monitor': <FiMonitor className="w-5 h-5" />,
+      // Mapeos adicionales para compatibilidad con iconos que creamos en la base de datos
+      'car': <FiTruck className="w-5 h-5" />, // Usamos truck en lugar de car
+      'utensils': <FiCoffee className="w-5 h-5" />, // Aproximación cercana
+      'plane': <FiPackage className="w-5 h-5" />, // Aproximación cercana
+      'flower': <FiHeart className="w-5 h-5" />, // Aproximación cercana
+      'pill': <FiHeart className="w-5 h-5" />, // Aproximación cercana
+      'flame': <FiZap className="w-5 h-5" />, // Aproximación cercana
+      'play': <FiFilm className="w-5 h-5" />, // Aproximación cercana
+      'droplet': <FiZap className="w-5 h-5" /> // Aproximación cercana ya que FiDroplet no existe
     };
 
     return iconMap[iconName] || <FiTag className="w-5 h-5" />;

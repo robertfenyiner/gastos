@@ -201,55 +201,55 @@ db.serialize(() => {
   // Function to add default categories
   function addDefaultCategories(userId) {
     const defaultCategories = [
-      // Basic Categories
-      { name: 'Alimentación', color: '#10b981', icon: 'utensils' },
-      { name: 'Transporte', color: '#3b82f6', icon: 'car' },
+      // Categorías Básicas
+      { name: 'Alimentación', color: '#10b981', icon: 'coffee' },
+      { name: 'Transporte', color: '#3b82f6', icon: 'truck' },
       { name: 'Salud', color: '#ef4444', icon: 'heart' },
       { name: 'Entretenimiento', color: '#f59e0b', icon: 'film' },
       { name: 'Compras', color: '#8b5cf6', icon: 'shopping-cart' },
       
-      // Household/Utilities
+      // Hogar/Servicios Públicos
       { name: 'Servicios Públicos', color: '#06b6d4', icon: 'zap' },
       { name: 'Electricidad', color: '#fbbf24', icon: 'zap' },
-      { name: 'Agua', color: '#06b6d4', icon: 'droplet' },
-      { name: 'Gas', color: '#f97316', icon: 'flame' },
+      { name: 'Agua', color: '#06b6d4', icon: 'zap' },
+      { name: 'Gas', color: '#f97316', icon: 'zap' },
       { name: 'Internet', color: '#6366f1', icon: 'wifi' },
       { name: 'Teléfono', color: '#84cc16', icon: 'phone' },
       { name: 'Cable/TV', color: '#ec4899', icon: 'tv' },
       
-      // Streaming & Digital Services
-      { name: 'Netflix', color: '#e50914', icon: 'play' },
+      // Streaming y Servicios Digitales
+      { name: 'Netflix', color: '#e50914', icon: 'film' },
       { name: 'Spotify', color: '#1db954', icon: 'music' },
       { name: 'Amazon Prime', color: '#ff9900', icon: 'package' },
       { name: 'Disney+', color: '#113ccf', icon: 'star' },
-      { name: 'YouTube Premium', color: '#ff0000', icon: 'play' },
+      { name: 'YouTube Premium', color: '#ff0000', icon: 'film' },
       { name: 'Apple Music', color: '#fa243c', icon: 'music' },
-      { name: 'HBO Max', color: '#9333ea', icon: 'play' },
-      { name: 'Paramount+', color: '#0064ff', icon: 'play' },
+      { name: 'HBO Max', color: '#9333ea', icon: 'film' },
+      { name: 'Paramount+', color: '#0064ff', icon: 'film' },
       
-      // Financial & Insurance
+      // Finanzas y Seguros
       { name: 'Seguros', color: '#059669', icon: 'shield' },
       { name: 'Banco/Tarjetas', color: '#dc2626', icon: 'credit-card' },
       { name: 'Inversiones', color: '#7c3aed', icon: 'trending-up' },
       
-      // Home & Maintenance
+      // Hogar y Mantenimiento
       { name: 'Hogar/Decoración', color: '#d97706', icon: 'home' },
       { name: 'Reparaciones', color: '#374151', icon: 'tool' },
-      { name: 'Jardinería', color: '#16a34a', icon: 'flower' },
+      { name: 'Jardinería', color: '#16a34a', icon: 'heart' },
       
-      // Personal Care
+      // Cuidado Personal
       { name: 'Cuidado Personal', color: '#be185d', icon: 'user' },
-      { name: 'Farmacia', color: '#dc2626', icon: 'pill' },
+      { name: 'Farmacia', color: '#dc2626', icon: 'heart' },
       { name: 'Gimnasio/Deporte', color: '#ea580c', icon: 'activity' },
       
-      // Education & Professional
+      // Educación y Profesional
       { name: 'Educación', color: '#1d4ed8', icon: 'book' },
       { name: 'Trabajo/Oficina', color: '#6b7280', icon: 'briefcase' },
       
-      // Others
+      // Otros
       { name: 'Mascotas', color: '#f59e0b', icon: 'heart' },
       { name: 'Regalos', color: '#ec4899', icon: 'gift' },
-      { name: 'Viajes', color: '#0ea5e9', icon: 'plane' },
+      { name: 'Viajes', color: '#0ea5e9', icon: 'package' },
       { name: 'Otros', color: '#64748b', icon: 'more-horizontal' }
     ];
 
