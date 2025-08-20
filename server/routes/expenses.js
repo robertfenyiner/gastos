@@ -50,6 +50,17 @@ router.get('/', authMiddleware, (req, res) => {
       return res.status(500).json({ message: 'Error de base de datos' });
     }
 
+    // Log para verificar datos de recurrencia
+    if (expenses.length > 0) {
+      console.log('Primer gasto recuperado:', {
+        id: expenses[0].id,
+        description: expenses[0].description,
+        is_recurring: expenses[0].is_recurring,
+        recurring_frequency: expenses[0].recurring_frequency,
+        reminder_days_advance: expenses[0].reminder_days_advance
+      });
+    }
+
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM expenses e WHERE e.user_id = ?';
     const countParams = [userId];
@@ -119,6 +130,10 @@ router.get('/:id', authMiddleware, (req, res) => {
 // Create new expense
 router.post('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
+  
+  // Log para depuración
+  console.log('Datos recibidos en backend:', req.body);
+  
   const {
     categoryId,
     currencyId,
@@ -131,6 +146,8 @@ router.post('/', authMiddleware, async (req, res) => {
     recurringFrequency = null,
     reminderDaysAdvance = 1
   } = req.body;
+  
+  console.log('Valores extraídos - isRecurring:', isRecurring, 'recurringFrequency:', recurringFrequency);
 
   const resolvedCategoryId = categoryId || category_id;
   const resolvedCurrencyId = currencyId || currency_id;
@@ -207,7 +224,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
     db.run(query, [
       userId, resolvedCategoryId, resolvedCurrencyId, amount, copAmount, exchangeRate, description, date,
-      isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance
+      isRecurring ? 1 : 0, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance
     ], function(err) {
       if (err) {
         console.error('Database error creating expense:', err);
@@ -229,6 +246,15 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(500).json({ message: 'Error al obtener el gasto creado' });
           }
 
+          // Log para verificar que se guardó la recurrencia
+          console.log('Gasto guardado en BD:', {
+            id: expense.id,
+            description: expense.description,
+            is_recurring: expense.is_recurring,
+            recurring_frequency: expense.recurring_frequency,
+            reminder_days_advance: expense.reminder_days_advance
+          });
+
           res.status(201).json({
             message: 'Gasto creado correctamente',
             expense
@@ -246,6 +272,10 @@ router.post('/', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const expenseId = req.params.id;
+  
+  // Log para depuración
+  console.log('Datos recibidos en PUT:', req.body);
+  
   const {
     categoryId,
     currencyId,
@@ -258,6 +288,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     recurringFrequency,
     reminderDaysAdvance = 1
   } = req.body;
+  
+  console.log('PUT - isRecurring:', isRecurring, 'recurringFrequency:', recurringFrequency);
 
   const resolvedCategoryId = categoryId || category_id;
   const resolvedCurrencyId = currencyId || currency_id;
@@ -335,7 +367,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
     db.run(query, [
       resolvedCategoryId, resolvedCurrencyId, amount, copAmount, exchangeRate, description, date,
-      isRecurring, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance,
+      isRecurring ? 1 : 0, recurringFrequency, nextDueDate?.toISOString().split('T')[0], reminderDaysAdvance,
       expenseId, userId
     ], function(err) {
     if (err) {
@@ -360,6 +392,15 @@ router.put('/:id', authMiddleware, async (req, res) => {
         if (err) {
           return res.status(500).json({ message: 'Error al obtener el gasto actualizado' });
         }
+
+        // Log para verificar que se actualizó la recurrencia
+        console.log('Gasto actualizado en BD:', {
+          id: expense.id,
+          description: expense.description,
+          is_recurring: expense.is_recurring,
+          recurring_frequency: expense.recurring_frequency,
+          reminder_days_advance: expense.reminder_days_advance
+        });
 
         res.json({
           message: 'Gasto actualizado correctamente',
@@ -460,6 +501,39 @@ router.get('/stats/summary', authMiddleware, (req, res) => {
         categoryStats,
         totalStats: totalStats || { total_expenses: 0, total_amount: 0, avg_amount: 0 }
       });
+    });
+  });
+});
+
+// Get recurring expenses (for debugging)
+router.get('/recurring', authMiddleware, (req, res) => {
+  const userId = req.user.id;
+
+  const query = `
+    SELECT e.id, e.description, e.is_recurring, e.recurring_frequency, e.reminder_days_advance,
+           e.next_due_date, e.created_at, e.updated_at,
+           c.name as category_name, cur.code as currency_code
+    FROM expenses e
+    JOIN categories c ON e.category_id = c.id
+    JOIN currencies cur ON e.currency_id = cur.id
+    WHERE e.user_id = ? AND e.is_recurring = 1
+    ORDER BY e.created_at DESC
+  `;
+
+  db.all(query, [userId], (err, expenses) => {
+    if (err) {
+      console.error('Error fetching recurring expenses:', err);
+      return res.status(500).json({ message: 'Error de base de datos' });
+    }
+
+    console.log(`Gastos recurrentes encontrados: ${expenses.length}`);
+    expenses.forEach(expense => {
+      console.log(`- ${expense.description}: recurring=${expense.is_recurring}, frequency=${expense.recurring_frequency}`);
+    });
+
+    res.json({
+      count: expenses.length,
+      expenses
     });
   });
 });

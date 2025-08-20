@@ -151,11 +151,17 @@ const Expenses: React.FC = () => {
 
     try {
       const submitData = {
-        ...formData,
         amount: parseFloat(formData.amount),
+        description: formData.description,
+        date: formData.date,
         categoryId: parseInt(formData.categoryId),
-        currencyId: parseInt(formData.currencyId)
+        currencyId: parseInt(formData.currencyId),
+        isRecurring: formData.is_recurring,
+        recurringFrequency: formData.recurring_frequency,
+        reminderDaysAdvance: formData.reminderDaysAdvance
       };
+
+      console.log('Enviando datos del gasto:', submitData); // Para depuración
 
       if (editingExpense) {
         await api.put(`/expenses/${editingExpense.id}`, submitData);
