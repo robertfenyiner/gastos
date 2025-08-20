@@ -70,7 +70,7 @@ router.post('/expense/:expenseId', authMiddleware, expenseUpload.array('attachme
                 fileName: file.filename,
                 size: file.size,
                 mimeType: file.mimetype,
-                downloadUrl: `/api/files/download/${this.lastID}`
+                downloadUrl: `/files/download/${this.lastID}`
               });
               resolve();
             }
@@ -237,7 +237,7 @@ router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), 
       profilePicture: {
         id: fileId,
         fileName: req.file.filename,
-        downloadUrl: `/api/files/download/${fileId}`
+        downloadUrl: `/files/profile/${req.file.filename}`
       }
     };
     

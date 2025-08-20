@@ -9,7 +9,9 @@
       "Bash(npm start)",
       "Bash(pm2 logs:*)",
       "Bash(node:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(npm run reload:server:*)",
+      "Bash(pm2 reload:*)"
     ],
     "deny": []
   }

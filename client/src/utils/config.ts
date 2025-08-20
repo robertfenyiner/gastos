@@ -14,10 +14,10 @@ export const getFileUrl = (path: string): string => {
 export const getProfilePictureUrl = (filename: string, version?: number | string): string => {
   const baseUrl = getApiBaseUrl();
   const versionParam = version ? `?v=${version}` : '';
-  return `${baseUrl}/files/profile/${filename}${versionParam}`;
+  return `${baseUrl}/api/files/profile/${filename}${versionParam}`;
 };
 
 export const getExpenseFileUrl = (fileId: number): string => {
   const baseUrl = getApiBaseUrl();
-  return `${baseUrl}/files/download/${fileId}`;
+  return `${baseUrl}/api/files/download/${fileId}`;
 };
