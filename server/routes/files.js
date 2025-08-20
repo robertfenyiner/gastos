@@ -442,7 +442,7 @@ router.get('/expense/:expenseId', authMiddleware, async (req, res) => {
       size: file.file_size,
       mimeType: file.mime_type,
       createdAt: file.created_at,
-      downloadUrl: `/api/files/download/${file.id}`,
+      downloadUrl: `/files/download/${file.id}`,
       isImage: file.mime_type.startsWith('image/')
     }));
 
@@ -584,7 +584,7 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req, res) => {
       size: file.file_size,
       mimeType: file.mime_type,
       createdAt: file.created_at,
-      downloadUrl: `/api/files/download/${file.id}`,
+      downloadUrl: `/files/download/${file.id}`,
       isImage: file.mime_type.startsWith('image/'),
       user: {
         id: file.user_id,
