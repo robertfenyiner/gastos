@@ -208,12 +208,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.info('Logged out successfully');
   }, []);
 
+  const updateUser = useCallback((updates: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  }, [user]);
+
   const value: AuthContextType = {
     user,
     token,
     login,
     register,
     logout,
+    updateUser,
     loading,
   };
 

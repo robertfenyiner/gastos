@@ -5,7 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -72,7 +72,12 @@ const Profile: React.FC = () => {
       });
       
       // The response contains the filename, we use it to construct the profile URL
-      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${response.data.profilePicture.fileName}`);
+      const fileName = response.data.profilePicture.fileName;
+      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${fileName}`);
+      
+      // Update the user context with the new profile picture filename
+      updateUser({ profile_picture: fileName });
+      
       setSuccessMessage('Foto de perfil actualizada exitosamente');
       setTimeout(() => setSuccessMessage(''), 3000);
       
@@ -104,6 +109,10 @@ const Profile: React.FC = () => {
       }
       
       setProfilePicture(null);
+      
+      // Update the user context to remove the profile picture
+      updateUser({ profile_picture: null });
+      
       setSuccessMessage('Foto de perfil eliminada exitosamente');
       setTimeout(() => setSuccessMessage(''), 3000);
       
