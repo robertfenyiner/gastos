@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   is_admin?: boolean;
+  profile_picture?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }

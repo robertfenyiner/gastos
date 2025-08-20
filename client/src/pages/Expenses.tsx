@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiCalendar, FiDollarSign, FiTag } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiPlus, FiEdit, FiTrash2, FiCalendar, FiDollarSign, FiTag, FiPaperclip, FiDownload, FiX, FiEye } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AmountDisplay from '../components/AmountDisplay';
@@ -64,6 +64,11 @@ const Expenses: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [expenseFiles, setExpenseFiles] = useState<any[]>([]);
+  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [viewingExpenseId, setViewingExpenseId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadInitialData();
@@ -163,10 +168,18 @@ const Expenses: React.FC = () => {
 
       console.log('Enviando datos del gasto:', submitData); // Para depuración
 
+      let expenseId;
       if (editingExpense) {
         await api.put(`/expenses/${editingExpense.id}`, submitData);
+        expenseId = editingExpense.id;
       } else {
-        await api.post('/expenses', submitData);
+        const response = await api.post('/expenses', submitData);
+        expenseId = response.data.expense?.id;
+      }
+
+      // Upload files if any are selected
+      if (selectedFiles.length > 0 && expenseId) {
+        await uploadExpenseFiles(expenseId);
       }
 
       setShowModal(false);
@@ -224,10 +237,107 @@ const Expenses: React.FC = () => {
       reminderDaysAdvance: 1
     });
     setErrors({});
+    setSelectedFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const sanitizeColor = (color: string) => {
     return /^#[0-9A-F]{6}$/i.test(color) ? color : '#6B7280';
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 5) {
+      setErrors({ files: 'Máximo 5 archivos permitidos' });
+      return;
+    }
+    
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const invalidFiles = files.filter(file => file.size > maxSize);
+    if (invalidFiles.length > 0) {
+      setErrors({ files: 'Algunos archivos exceden el tamaño máximo de 10MB' });
+      return;
+    }
+    
+    setSelectedFiles(files);
+    setErrors({ ...errors, files: '' });
+  };
+
+  const removeSelectedFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+  };
+
+  const uploadExpenseFiles = async (expenseId: number) => {
+    if (selectedFiles.length === 0) return;
+    
+    const formData = new FormData();
+    selectedFiles.forEach(file => {
+      formData.append('attachments', file);
+    });
+    
+    try {
+      await api.post(`/files/expense/${expenseId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log('Archivos subidos exitosamente');
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    }
+  };
+
+  const loadExpenseFiles = async (expenseId: number) => {
+    try {
+      const response = await api.get(`/files/expense/${expenseId}`);
+      setExpenseFiles(response.data.files);
+    } catch (error) {
+      console.error('Error loading expense files:', error);
+    }
+  };
+
+  const viewExpenseFiles = (expenseId: number) => {
+    setViewingExpenseId(expenseId);
+    loadExpenseFiles(expenseId);
+    setShowFilesModal(true);
+  };
+
+  const downloadFile = async (fileId: number, fileName: string) => {
+    try {
+      const response = await api.get(`/files/download/${fileId}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
+
+  const deleteExpenseFile = async (fileId: number) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este archivo?')) {
+      return;
+    }
+    
+    try {
+      await api.delete(`/files/${fileId}`);
+      if (viewingExpenseId) {
+        loadExpenseFiles(viewingExpenseId);
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
   };
 
   if (loading && expenses.length === 0) {
@@ -406,6 +516,13 @@ const Expenses: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
+                          onClick={() => viewExpenseFiles(expense.id)}
+                          className="text-green-600 hover:text-green-900 mr-4"
+                          title="Ver archivos"
+                        >
+                          <FiPaperclip className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleEdit(expense)}
                           className="text-blue-600 hover:text-blue-900 mr-4"
                           title="Editar gasto"
@@ -446,6 +563,13 @@ const Expenses: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2 ml-2">
+                      <button
+                        onClick={() => viewExpenseFiles(expense.id)}
+                        className="text-green-600 hover:text-green-900 p-1"
+                        title="Ver archivos"
+                      >
+                        <FiPaperclip className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleEdit(expense)}
                         className="text-blue-600 hover:text-blue-900 p-1"
@@ -676,6 +800,62 @@ const Expenses: React.FC = () => {
                   </>
                 )}
 
+                {/* File attachments section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Archivos adjuntos (opcional)
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  >
+                    <FiPaperclip className="w-4 h-4 mr-2" />
+                    Seleccionar archivos
+                  </button>
+                  
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {selectedFiles.length} archivo(s) seleccionado(s)
+                      </p>
+                      <div className="max-h-32 overflow-y-auto space-y-1">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                            <span className="truncate flex-1">{file.name}</span>
+                            <span className="text-gray-500 dark:text-gray-400 mx-2">
+                              {(file.size / 1024).toFixed(1)}KB
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeSelectedFile(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <FiX className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {errors.files && (
+                    <p className="mt-1 text-sm text-red-600">{errors.files}</p>
+                  )}
+                  
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Se permiten imágenes, PDF, documentos de Office y archivos de texto. Máximo 5 archivos de 10MB cada uno.
+                  </p>
+                </div>
+
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
@@ -696,6 +876,91 @@ const Expenses: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Files Modal */}
+      {showFilesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                  Archivos adjuntos
+                </h3>
+                <button
+                  onClick={() => setShowFilesModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              {expenseFiles.length === 0 ? (
+                <div className="text-center py-8">
+                  <FiPaperclip className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">No hay archivos</h3>
+                  <p className="mt-2 text-gray-500 dark:text-gray-400">Este gasto no tiene archivos adjuntos.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {expenseFiles.map((file) => (
+                    <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center flex-1">
+                        <div className="flex-shrink-0">
+                          {file.isImage ? (
+                            <img
+                              src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${file.id}`}
+                              alt={file.originalName}
+                              className="w-10 h-10 object-cover rounded"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <FiPaperclip className={`w-10 h-10 text-gray-400 ${file.isImage ? 'hidden' : ''}`} />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {file.originalName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {(file.size / 1024).toFixed(1)} KB • {new Date(file.createdAt).toLocaleDateString('es-ES')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 ml-3">
+                        <button
+                          onClick={() => downloadFile(file.id, file.originalName)}
+                          className="text-blue-600 hover:text-blue-900 p-1"
+                          title="Descargar"
+                        >
+                          <FiDownload className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteExpenseFile(file.id)}
+                          className="text-red-600 hover:text-red-900 p-1"
+                          title="Eliminar"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowFilesModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>

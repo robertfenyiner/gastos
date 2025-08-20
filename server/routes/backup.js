@@ -140,20 +140,25 @@ router.get('/list', authMiddleware, adminMiddleware, async (req, res) => {
 // Restore from backup
 router.post('/restore', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const { fileName, clearExistingData = true } = req.body;
+    const { fileName, backupData: directBackupData, clearExistingData = true } = req.body;
+    let backupData;
 
-    if (!fileName) {
-      return res.status(400).json({ message: 'Nombre de archivo requerido' });
+    if (directBackupData) {
+      // Direct backup data provided (from file upload)
+      backupData = directBackupData;
+    } else if (fileName) {
+      // Read from server backup file
+      const backupPath = path.join(__dirname, '../backups', fileName);
+
+      if (!fsSync.existsSync(backupPath)) {
+        return res.status(404).json({ message: 'Archivo de backup no encontrado' });
+      }
+
+      // Read backup file
+      backupData = JSON.parse(await fs.readFile(backupPath, 'utf8'));
+    } else {
+      return res.status(400).json({ message: 'Nombre de archivo o datos de backup requeridos' });
     }
-
-    const backupPath = path.join(__dirname, '../backups', fileName);
-
-    if (!fsSync.existsSync(backupPath)) {
-      return res.status(404).json({ message: 'Archivo de backup no encontrado' });
-    }
-
-    // Read backup file
-    const backupData = JSON.parse(await fs.readFile(backupPath, 'utf8'));
 
     // Validate backup structure
     if (!backupData.metadata || !backupData.metadata.version) {

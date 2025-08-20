@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase, FiPlus, FiEdit, FiShield } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase, FiPlus, FiEdit, FiShield, FiUpload, FiFolder, FiFile, FiImage } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmailTemplateEditor from '../components/EmailTemplateEditor';
@@ -30,6 +30,41 @@ interface Backup {
   downloadUrl: string;
 }
 
+interface FileAttachment {
+  id: number;
+  originalName: string;
+  fileName: string;
+  fileType: string;
+  size: number;
+  mimeType: string;
+  createdAt: string;
+  downloadUrl: string;
+  isImage: boolean;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
+  expense?: {
+    id: number;
+    description: string;
+    amount: number;
+  };
+}
+
+interface FileStats {
+  totalStats: {
+    total_files: number;
+    total_size: number;
+  };
+  byType: Array<{
+    file_type: string;
+    file_count: number;
+    total_size: number;
+    avg_size: number;
+  }>;
+}
+
 const Admin: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -49,6 +84,15 @@ const Admin: React.FC = () => {
     isAdmin: false
   });
   const [userFormErrors, setUserFormErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // File management state
+  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [fileStats, setFileStats] = useState<FileStats | null>(null);
+  const [fileFilter, setFileFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [filePage, setFilePage] = useState(1);
+  const [fileTotalPages, setFileTotalPages] = useState(1);
 
   useEffect(() => {
     if (user?.is_admin) {
@@ -61,8 +105,11 @@ const Admin: React.FC = () => {
       loadUsers();
     } else if (activeTab === 'backups') {
       loadBackups();
+    } else if (activeTab === 'files') {
+      loadFiles();
+      loadFileStats();
     }
-  }, [activeTab, currentPage, userSearch]);
+  }, [activeTab, currentPage, userSearch, filePage, fileFilter, userFilter]);
 
   const loadDashboardData = async () => {
     try {
@@ -229,8 +276,101 @@ const Admin: React.FC = () => {
     }
   };
 
-  const downloadBackup = (backup: Backup) => {
-    window.open(backup.downloadUrl, '_blank');
+  const handleRestoreBackup = (backup: Backup) => {
+    if (window.confirm(`¿Estás seguro de que deseas restaurar el backup "${backup.fileName}"? Esto sobrescribirá todos los datos actuales excepto el usuario administrador.`)) {
+      restoreFromBackup(backup.fileName);
+    }
+  };
+
+  const restoreFromBackup = async (fileName: string) => {
+    try {
+      setLoading(true);
+      const response = await api.post('/backup/restore', { 
+        fileName, 
+        clearExistingData: true 
+      });
+      alert(`Backup restaurado exitosamente. Datos importados: ${JSON.stringify(response.data.results, null, 2)}`);
+      // Reload current data
+      if (activeTab === 'users') {
+        loadUsers();
+      } else if (activeTab === 'dashboard') {
+        loadDashboardData();
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error al restaurar el backup');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      alert('Por favor selecciona un archivo JSON válido');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const fileContent = await file.text();
+      const backupData = JSON.parse(fileContent);
+      
+      // Validate backup structure
+      if (!backupData.metadata || !backupData.metadata.version) {
+        alert('Formato de backup inválido');
+        return;
+      }
+
+      if (window.confirm(`¿Deseas restaurar el backup "${file.name}"? Esto sobrescribirá todos los datos actuales excepto el usuario administrador.`)) {
+        // For file upload restore, we need to save the file first
+        // Since we can't directly upload files in this implementation,
+        // we'll use the restore API with the parsed data
+        const response = await api.post('/backup/restore', { 
+          backupData, 
+          clearExistingData: true 
+        });
+        alert(`Backup restaurado exitosamente desde archivo. Datos importados: ${JSON.stringify(response.data.results, null, 2)}`);
+        
+        // Reload current data
+        if (activeTab === 'users') {
+          loadUsers();
+        } else if (activeTab === 'dashboard') {
+          loadDashboardData();
+        }
+      }
+    } catch (error) {
+      console.error('Error processing backup file:', error);
+      alert('Error al procesar el archivo de backup. Verifica que sea un archivo JSON válido.');
+    } finally {
+      setLoading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const downloadBackup = async (backup: Backup) => {
+    try {
+      const response = await api.get(backup.downloadUrl, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = backup.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading backup:', error);
+      alert('Error al descargar el backup');
+    }
   };
 
   const deleteBackup = async (fileName: string) => {
@@ -244,6 +384,77 @@ const Admin: React.FC = () => {
     } catch (error: any) {
       alert(error.response?.data?.message || 'Error al eliminar el backup');
     }
+  };
+
+  const loadFiles = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: filePage.toString(),
+        limit: '20',
+        ...(fileFilter && { fileType: fileFilter }),
+        ...(userFilter && { userId: userFilter })
+      });
+      
+      const response = await api.get(`/files/admin/all?${params}`);
+      setFiles(response.data.files);
+      setFileTotalPages(response.data.pagination.totalPages);
+    } catch (error) {
+      console.error('Error loading files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFileStats = async () => {
+    try {
+      const response = await api.get('/files/admin/stats');
+      setFileStats(response.data);
+    } catch (error) {
+      console.error('Error loading file stats:', error);
+    }
+  };
+
+  const downloadFile = async (file: FileAttachment) => {
+    try {
+      const response = await api.get(file.downloadUrl, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.originalName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
+
+  const deleteFile = async (fileId: number) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este archivo? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    
+    try {
+      await api.delete(`/files/${fileId}`);
+      loadFiles();
+      loadFileStats();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error al eliminar el archivo');
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   if (!user?.is_admin) {
@@ -311,6 +522,17 @@ const Admin: React.FC = () => {
           >
             <FiDatabase className="w-4 h-4 inline mr-2" />
             Backups
+          </button>
+          <button
+            onClick={() => setActiveTab('files')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'files'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FiFolder className="w-4 h-4 inline mr-2" />
+            Archivos
           </button>
         </nav>
       </div>
@@ -532,19 +754,37 @@ const Admin: React.FC = () => {
         <div className="space-y-4">
           {/* Backup Actions */}
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">Gestión de Backups</h3>
-            <button
-              onClick={createBackup}
-              disabled={loading}
-              className="btn-primary flex items-center"
-            >
-              {loading ? (
-                <LoadingSpinner size="sm" />
-              ) : (
-                <FiDatabase className="w-4 h-4 mr-2" />
-              )}
-              Crear Backup
-            </button>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Gestión de Backups</h3>
+            <div className="flex space-x-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                className="btn-secondary flex items-center"
+                title="Restaurar desde archivo"
+              >
+                <FiUpload className="w-4 h-4 mr-2" />
+                Restaurar
+              </button>
+              <button
+                onClick={createBackup}
+                disabled={loading}
+                className="btn-primary flex items-center"
+              >
+                {loading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <FiDatabase className="w-4 h-4 mr-2" />
+                )}
+                Crear Backup
+              </button>
+            </div>
           </div>
 
           {/* Backups List */}
@@ -592,6 +832,13 @@ const Admin: React.FC = () => {
                           title="Descargar backup"
                         >
                           <FiDownload className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRestoreBackup(backup)}
+                          className="text-green-600 hover:text-green-900"
+                          title="Restaurar backup"
+                        >
+                          <FiUpload className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => deleteBackup(backup.fileName)}

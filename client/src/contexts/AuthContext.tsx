@@ -32,6 +32,7 @@ const parseUserSafely = (userStr: string): User | null => {
       username: parsed.username.trim(),
       email: parsed.email.trim().toLowerCase(),
       is_admin: parsed.is_admin || false,
+      profile_picture: parsed.profile_picture || null,
       created_at: parsed.created_at || null,
       updated_at: parsed.updated_at || null
     };
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: response.data.user.username?.trim() || '',
           email: response.data.user.email?.trim().toLowerCase() || '',
           is_admin: response.data.user.is_admin || false,
+          profile_picture: response.data.user.profile_picture || null,
           created_at: response.data.user.created_at || null,
           updated_at: response.data.user.updated_at || null
         };
@@ -140,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: newUser.username?.trim() || '',
         email: newUser.email?.trim().toLowerCase() || '',
         is_admin: newUser.is_admin || false,
+        profile_picture: newUser.profile_picture || null,
         created_at: newUser.created_at || null,
         updated_at: newUser.updated_at || null
       };
@@ -178,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: newUser.username?.trim() || '',
         email: newUser.email?.trim().toLowerCase() || '',
         is_admin: newUser.is_admin || false,
+        profile_picture: newUser.profile_picture || null,
         created_at: newUser.created_at || null,
         updated_at: newUser.updated_at || null
       };

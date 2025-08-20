@@ -78,7 +78,8 @@ router.post('/register', async (req, res) => {
               id: userId,
               username,
               email,
-              is_admin: false
+              is_admin: false,
+              profile_picture: null
             }
           });
         }
@@ -98,7 +99,7 @@ router.post('/login', (req, res) => {
       return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
     }
 
-    db.get('SELECT id, username, email, password_hash, is_admin FROM users WHERE email = ?', [email], async (err, user) => {
+    db.get('SELECT id, username, email, password_hash, is_admin, profile_picture FROM users WHERE email = ?', [email], async (err, user) => {
       if (err) {
         return res.status(500).json({ message: 'Error de base de datos' });
       }
@@ -127,7 +128,8 @@ router.post('/login', (req, res) => {
           id: user.id,
           username: user.username,
           email: user.email,
-          is_admin: user.is_admin
+          is_admin: user.is_admin,
+          profile_picture: user.profile_picture
         }
       });
     });
@@ -167,7 +169,8 @@ router.post('/refresh', authMiddleware, (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        is_admin: user.is_admin
+        is_admin: user.is_admin,
+        profile_picture: user.profile_picture
       }
     });
   } catch (error) {

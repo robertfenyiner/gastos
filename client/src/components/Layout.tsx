@@ -96,8 +96,21 @@ const Layout: React.FC = () => {
         {/* User info and logout */}
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white text-base font-bold">
-              {user ? getInitials(user.username) : 'U'}
+            <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white text-base font-bold overflow-hidden">
+              {user?.profile_picture ? (
+                <img
+                  src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${user.profile_picture}`}
+                  alt={user.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <span className={user?.profile_picture ? 'hidden' : ''}>
+                {user ? getInitials(user.username) : 'U'}
+              </span>
             </div>
             <div className="hidden lg:block ml-3">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user?.username}</p>
@@ -136,8 +149,21 @@ const Layout: React.FC = () => {
 
             <div className="flex items-center space-x-4">
               <ThemeToggle className="hidden sm:block" />
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium lg:hidden">
-                {user ? getInitials(user.username) : 'U'}
+              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium lg:hidden overflow-hidden">
+                {user?.profile_picture ? (
+                  <img
+                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${user.profile_picture}`}
+                    alt={user.username}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <span className={user?.profile_picture ? 'hidden' : ''}>
+                  {user ? getInitials(user.username) : 'U'}
+                </span>
               </div>
             </div>
           </div>

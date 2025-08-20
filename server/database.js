@@ -103,6 +103,13 @@ db.serialize(() => {
     }
   });
 
+  // Add profile picture column to users table
+  db.run(`ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding profile_picture column:', err);
+    }
+  });
+
   db.run(`ALTER TABLE expenses ADD COLUMN amount_cop DECIMAL(10,2) DEFAULT NULL`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
       console.error('Error adding amount_cop column:', err);
@@ -123,6 +130,24 @@ db.serialize(() => {
       expense_id INTEGER NOT NULL,
       reminder_date DATE NOT NULL,
       is_sent BOOLEAN DEFAULT FALSE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+      FOREIGN KEY (expense_id) REFERENCES expenses (id) ON DELETE CASCADE
+    )
+  `);
+
+  // Tabla de archivos adjuntos
+  db.run(`
+    CREATE TABLE IF NOT EXISTS file_attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      expense_id INTEGER,
+      file_type VARCHAR(20) NOT NULL, -- 'expense', 'profile'
+      original_name VARCHAR(255) NOT NULL,
+      file_name VARCHAR(255) NOT NULL,
+      file_path VARCHAR(500) NOT NULL,
+      file_size INTEGER NOT NULL,
+      mime_type VARCHAR(100) NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
       FOREIGN KEY (expense_id) REFERENCES expenses (id) ON DELETE CASCADE

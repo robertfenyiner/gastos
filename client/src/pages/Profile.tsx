@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FiUser, FiMail, FiKey, FiSave, FiEye, FiEyeOff, FiSend } from 'react-icons/fi';
+import React, { useState, useRef } from 'react';
+import { FiUser, FiMail, FiKey, FiSave, FiEye, FiEyeOff, FiSend, FiCamera, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
@@ -27,6 +27,96 @@ const Profile: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const profilePictureRef = useRef<HTMLInputElement>(null);
+
+  // Load profile picture on component mount
+  React.useEffect(() => {
+    if (user?.profile_picture) {
+      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${user.profile_picture}`);
+    }
+  }, [user]);
+
+  const handleProfilePictureSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors({ profilePicture: 'Solo se permiten archivos de imagen' });
+      return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors({ profilePicture: 'La imagen debe ser menor a 5MB' });
+      return;
+    }
+    
+    uploadProfilePicture(file);
+  };
+  
+  const uploadProfilePicture = async (file: File) => {
+    setUploadingPicture(true);
+    setErrors({ ...errors, profilePicture: '' });
+    
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      
+      const response = await api.post('/files/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // The response contains the filename, not the file ID for downloads
+      // We need to construct the URL using the filename
+      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${response.data.profilePicture.id}`);
+      setSuccessMessage('Foto de perfil actualizada exitosamente');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      
+      // Refresh user data to get updated profile picture filename
+      // This would ideally be handled by updating the auth context
+      
+    } catch (error: any) {
+      setErrors({ profilePicture: error.response?.data?.message || 'Error al subir la foto de perfil' });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+  
+  const deleteProfilePicture = async () => {
+    if (!window.confirm('¿Seguro que deseas eliminar tu foto de perfil?')) {
+      return;
+    }
+    
+    if (!user?.profile_picture) {
+      return;
+    }
+    
+    try {
+      setUploadingPicture(true);
+      
+      // Find the file by the profile_picture filename and delete it
+      const response = await api.get('/files/admin/all?fileType=profile&userId=' + user.id);
+      const profileFile = response.data.files.find((file: any) => file.fileName === user.profile_picture);
+      
+      if (profileFile) {
+        await api.delete(`/files/${profileFile.id}`);
+      }
+      
+      setProfilePicture(null);
+      setSuccessMessage('Foto de perfil eliminada exitosamente');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      
+    } catch (error: any) {
+      setErrors({ profilePicture: error.response?.data?.message || 'Error al eliminar la foto de perfil' });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
 
   const validateProfileForm = () => {
     const newErrors: Record<string, string> = {};
@@ -189,8 +279,76 @@ const Profile: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-  <h1 className="text-2xl font-bold text-gray-900">Configuración de perfil</h1>
-  <p className="text-gray-600">Gestiona tu información y seguridad</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Configuración de perfil</h1>
+        <p className="text-gray-600 dark:text-gray-400">Gestiona tu información y seguridad</p>
+      </div>
+
+      {/* Profile Picture Section */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+          Foto de perfil
+        </h2>
+        
+        <div className="flex items-center space-x-6">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+              {profilePicture ? (
+                <img
+                  src={profilePicture}
+                  alt="Foto de perfil"
+                  className="w-full h-full object-cover"
+                  onError={() => setProfilePicture(null)}
+                />
+              ) : (
+                <FiUser className="w-12 h-12 text-gray-400" />
+              )}
+            </div>
+            {uploadingPicture && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                <LoadingSpinner size="sm" />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1">
+            <div className="flex space-x-3">
+              <input
+                ref={profilePictureRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureSelect}
+                className="hidden"
+              />
+              <button
+                onClick={() => profilePictureRef.current?.click()}
+                disabled={uploadingPicture}
+                className="flex items-center px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50"
+              >
+                <FiCamera className="w-4 h-4 mr-2" />
+                {profilePicture ? 'Cambiar foto' : 'Subir foto'}
+              </button>
+              
+              {profilePicture && (
+                <button
+                  onClick={deleteProfilePicture}
+                  disabled={uploadingPicture}
+                  className="flex items-center px-3 py-2 text-sm border border-red-300 dark:border-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 disabled:opacity-50"
+                >
+                  <FiTrash2 className="w-4 h-4 mr-2" />
+                  Eliminar
+                </button>
+              )}
+            </div>
+            
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Se permiten archivos JPG, PNG, GIF hasta 5MB
+            </p>
+            
+            {errors.profilePicture && (
+              <p className="mt-1 text-sm text-red-600">{errors.profilePicture}</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Success Message */}
