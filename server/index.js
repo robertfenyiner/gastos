@@ -148,6 +148,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Test page for debugging uploads
+app.get('/test-upload', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-upload.html'));
+});
+
 // Endpoint para limpiar rate limiting (solo desarrollo)
 app.get('/api/clear-rate-limit', (req, res) => {
   if (process.env.NODE_ENV === 'production') {

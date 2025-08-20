@@ -6,7 +6,9 @@
       "Bash(npm install:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(pm2 logs:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

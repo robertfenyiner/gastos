@@ -107,6 +107,42 @@ router.post('/expense/:expenseId', authMiddleware, expenseUpload.array('attachme
   }
 });
 
+// Test endpoint without auth for debugging
+router.post('/test-profile', profileUpload.single('profilePicture'), async (req, res) => {
+  try {
+    console.log(`[TEST_UPLOAD] Archivo recibido sin autenticación`);
+    
+    if (!req.file) {
+      console.log(`[TEST_UPLOAD] Error: No se recibió archivo`);
+      return res.status(400).json({ message: 'No se envió archivo' });
+    }
+    
+    console.log(`[TEST_UPLOAD] Archivo guardado:`, {
+      originalname: req.file.originalname,
+      filename: req.file.filename,
+      size: req.file.size,
+      path: req.file.path
+    });
+    
+    res.json({
+      message: 'Archivo subido exitosamente (modo prueba)',
+      file: {
+        originalName: req.file.originalname,
+        fileName: req.file.filename,
+        size: req.file.size,
+        path: req.file.path
+      }
+    });
+    
+  } catch (error) {
+    console.error('[TEST_UPLOAD] Error:', error);
+    res.status(500).json({
+      message: 'Error en la prueba de subida',
+      error: error.message
+    });
+  }
+});
+
 // Upload profile picture
 router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), async (req, res) => {
   try {
