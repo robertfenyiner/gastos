@@ -1,6 +1,7 @@
 // Configuración centralizada para URLs
 export const getApiBaseUrl = (): string => {
-  return process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  // Para producción, usar directamente la IP del servidor
+  return 'http://5.189.146.163';
 };
 
 export const getFileUrl = (path: string): string => {
