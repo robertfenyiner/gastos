@@ -17,7 +17,7 @@ import ThemeToggle from './ThemeToggle';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, profilePictureVersion } = useAuth();
   const location = useLocation();
 
   const baseNavigation = [
@@ -37,6 +37,11 @@ const Layout: React.FC = () => {
     : baseNavigation;
 
   const isCurrentPath = (path: string) => location.pathname === path;
+  
+  const getProfilePictureUrl = (filename: string) => {
+    const baseUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${filename}`;
+    return `${baseUrl}?v=${profilePictureVersion}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-300">
@@ -99,7 +104,7 @@ const Layout: React.FC = () => {
             <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white text-base font-bold overflow-hidden">
               {user?.profile_picture ? (
                 <img
-                  src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}`}
+                  src={getProfilePictureUrl(user.profile_picture)}
                   alt={user.username}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -152,7 +157,7 @@ const Layout: React.FC = () => {
               <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium lg:hidden overflow-hidden">
                 {user?.profile_picture ? (
                   <img
-                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}`}
+                    src={getProfilePictureUrl(user.profile_picture)}
                     alt={user.username}
                     className="w-full h-full object-cover"
                     onError={(e) => {

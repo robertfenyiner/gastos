@@ -5,7 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
 
 const Profile: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, profilePictureVersion } = useAuth();
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -31,12 +31,14 @@ const Profile: React.FC = () => {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const profilePictureRef = useRef<HTMLInputElement>(null);
 
-  // Load profile picture on component mount
+  // Load profile picture on component mount and when version changes
   React.useEffect(() => {
     if (user?.profile_picture) {
-      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}`);
+      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}?v=${profilePictureVersion}`);
+    } else {
+      setProfilePicture(null);
     }
-  }, [user]);
+  }, [user, profilePictureVersion]);
 
   const handleProfilePictureSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -71,12 +73,9 @@ const Profile: React.FC = () => {
         }
       });
       
-      // The response contains the filename, we use it to construct the profile URL
-      const fileName = response.data.profilePicture.fileName;
-      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${fileName}`);
-      
       // Update the user context with the new profile picture filename
-      updateUser({ profile_picture: fileName });
+      const fileName = response.data.profilePicture.fileName;
+      await updateUser({ profile_picture: fileName });
       
       setSuccessMessage('Foto de perfil actualizada exitosamente');
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -111,7 +110,7 @@ const Profile: React.FC = () => {
       setProfilePicture(null);
       
       // Update the user context to remove the profile picture
-      updateUser({ profile_picture: null });
+      await updateUser({ profile_picture: null });
       
       setSuccessMessage('Foto de perfil eliminada exitosamente');
       setTimeout(() => setSuccessMessage(''), 3000);

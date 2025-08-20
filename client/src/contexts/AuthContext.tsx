@@ -61,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [profilePictureVersion, setProfilePictureVersion] = useState(1);
 
   // Memoized verify function to prevent race conditions
   const verifyToken = useCallback(async (tokenToVerify: string) => {
@@ -208,13 +209,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.info('Logged out successfully');
   }, []);
 
-  const updateUser = useCallback((updates: Partial<User>) => {
+  const updateUser = useCallback(async (updates: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Si se actualizó la foto de perfil, incrementar la versión
+      if (updates.profile_picture !== undefined) {
+        setProfilePictureVersion(prev => prev + 1);
+      }
+      
+      // También verificar con el servidor para obtener la información más actualizada
+      if (token) {
+        try {
+          const response = await api.get('/auth/me');
+          if (response.data?.user) {
+            const serverUser = {
+              id: response.data.user.id,
+              username: response.data.user.username?.trim() || '',
+              email: response.data.user.email?.trim().toLowerCase() || '',
+              is_admin: response.data.user.is_admin || false,
+              profile_picture: response.data.user.profile_picture || null,
+              created_at: response.data.user.created_at || null,
+              updated_at: response.data.user.updated_at || null
+            };
+            setUser(serverUser);
+            localStorage.setItem('user', JSON.stringify(serverUser));
+          }
+        } catch (error) {
+          console.error('Error al sincronizar usuario con servidor:', error);
+          // Mantener la actualización local si falla la sincronización
+        }
+      }
     }
-  }, [user]);
+  }, [user, token]);
 
   const value: AuthContextType = {
     user,
@@ -223,6 +252,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     updateUser,
+    profilePictureVersion,
     loading,
   };
 
