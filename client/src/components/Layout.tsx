@@ -99,7 +99,7 @@ const Layout: React.FC = () => {
             <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white text-base font-bold overflow-hidden">
               {user?.profile_picture ? (
                 <img
-                  src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${user.profile_picture}`}
+                  src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}`}
                   alt={user.username}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -152,7 +152,7 @@ const Layout: React.FC = () => {
               <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium lg:hidden overflow-hidden">
                 {user?.profile_picture ? (
                   <img
-                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${user.profile_picture}`}
+                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}`}
                     alt={user.username}
                     className="w-full h-full object-cover"
                     onError={(e) => {

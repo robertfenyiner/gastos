@@ -34,7 +34,7 @@ const Profile: React.FC = () => {
   // Load profile picture on component mount
   React.useEffect(() => {
     if (user?.profile_picture) {
-      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${user.profile_picture}`);
+      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}`);
     }
   }, [user]);
 
@@ -71,14 +71,10 @@ const Profile: React.FC = () => {
         }
       });
       
-      // The response contains the filename, not the file ID for downloads
-      // We need to construct the URL using the filename
-      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${response.data.profilePicture.id}`);
+      // The response contains the filename, we use it to construct the profile URL
+      setProfilePicture(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${response.data.profilePicture.fileName}`);
       setSuccessMessage('Foto de perfil actualizada exitosamente');
       setTimeout(() => setSuccessMessage(''), 3000);
-      
-      // Refresh user data to get updated profile picture filename
-      // This would ideally be handled by updating the auth context
       
     } catch (error: any) {
       setErrors({ profilePicture: error.response?.data?.message || 'Error al subir la foto de perfil' });

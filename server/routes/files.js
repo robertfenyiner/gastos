@@ -208,6 +208,71 @@ router.post('/profile', authMiddleware, profileUpload.single('profilePicture'), 
   }
 });
 
+// Download profile picture by filename (public endpoint with user verification)
+router.get('/profile/:filename', authMiddleware, async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const userId = req.user.id;
+
+    // Verify this profile picture belongs to the current user or user is admin
+    const userCheck = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM users WHERE (id = ? OR ?) AND profile_picture = ?', 
+        [userId, req.user.is_admin, filename], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!userCheck) {
+      return res.status(403).json({ message: 'No tienes permisos para acceder a esta imagen' });
+    }
+
+    // Get file information from database
+    const fileRecord = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM file_attachments WHERE file_name = ? AND file_type = "profile"',
+        [filename],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!fileRecord) {
+      return res.status(404).json({ message: 'Imagen no encontrada' });
+    }
+
+    // Check if file exists
+    if (!fsSync.existsSync(fileRecord.file_path)) {
+      return res.status(404).json({ message: 'Archivo físico no encontrado' });
+    }
+
+    // Set appropriate headers for image
+    res.setHeader('Content-Type', fileRecord.mime_type);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    res.setHeader('Content-Length', fileRecord.file_size);
+
+    // Stream file
+    const fileStream = fsSync.createReadStream(fileRecord.file_path);
+    fileStream.pipe(res);
+
+    fileStream.on('error', (error) => {
+      console.error('Error streaming profile picture:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: 'Error al cargar la imagen' });
+      }
+    });
+
+  } catch (error) {
+    console.error('Error serving profile picture:', error);
+    res.status(500).json({
+      message: 'Error al cargar la imagen',
+      error: error.message
+    });
+  }
+});
+
 // Download file
 router.get('/download/:fileId', authMiddleware, async (req, res) => {
   try {

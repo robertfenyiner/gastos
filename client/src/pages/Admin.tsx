@@ -417,7 +417,12 @@ const Admin: React.FC = () => {
 
   const downloadFile = async (file: FileAttachment) => {
     try {
-      const response = await api.get(file.downloadUrl, {
+      // Use the appropriate endpoint based on file type
+      const downloadUrl = file.fileType === 'profile' 
+        ? `/api/files/profile/${file.fileName}`
+        : file.downloadUrl;
+      
+      const response = await api.get(downloadUrl, {
         responseType: 'blob'
       });
       
