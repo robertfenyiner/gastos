@@ -419,10 +419,15 @@ const Admin: React.FC = () => {
 
   const downloadFile = async (file: FileAttachment) => {
     try {
-      // Use the appropriate endpoint based on file type
-      const downloadUrl = file.fileType === 'profile' 
-        ? `/api/files/profile/${file.fileName}`
-        : file.downloadUrl;
+      // Para descarga, siempre usar el endpoint estándar que maneja autenticación
+      const downloadUrl = file.downloadUrl;
+      
+      console.log('[ADMIN] Downloading file:', {
+        fileType: file.fileType,
+        fileName: file.fileName,
+        downloadUrl: downloadUrl,
+        fileId: file.id
+      });
       
       const response = await api.get(downloadUrl, {
         responseType: 'blob'
