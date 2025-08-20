@@ -9,11 +9,6 @@ module.exports = {
       NODE_ENV: 'development',
       PORT: 5000
     },
-    env_production: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      JWT_EXPIRES_IN: '7d'
-    },
     // Logging configuration
     error_file: '/var/log/gastos-robert/error.log',
     out_file: '/var/log/gastos-robert/access.log',
