@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase, FiPlus, FiEdit, FiShield, FiUpload, FiFolder, FiFile, FiImage } from 'react-icons/fi';
+import { FiUsers, FiSettings, FiMail, FiDownload, FiTrash2, FiDatabase, FiPlus, FiEdit, FiShield, FiUpload, FiFolder, FiFile, FiImage, FiUser } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmailTemplateEditor from '../components/EmailTemplateEditor';
@@ -860,6 +860,236 @@ const Admin: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Files Management Tab */}
+      {activeTab === 'files' && (
+        <div className="space-y-6">
+          {/* File Stats */}
+          {fileStats && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                    <FiFile className="w-6 h-6" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{fileStats.totalStats.total_files}</p>
+                    <p className="text-gray-600 dark:text-gray-400">Total archivos</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400">
+                    <FiDatabase className="w-6 h-6" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{formatFileSize(fileStats.totalStats.total_size)}</p>
+                    <p className="text-gray-600 dark:text-gray-400">Espacio usado</p>
+                  </div>
+                </div>
+              </div>
+              
+              {fileStats.byType.map((type) => (
+                <div key={type.file_type} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+                      {type.file_type === 'profile' ? <FiUser className="w-6 h-6" /> : <FiFile className="w-6 h-6" />}
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{type.file_count}</p>
+                      <p className="text-gray-600 dark:text-gray-400">{type.file_type === 'profile' ? 'Fotos perfil' : 'Archivos gastos'}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Filters */}
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Filtrar por tipo
+                </label>
+                <select
+                  value={fileFilter}
+                  onChange={(e) => {
+                    setFileFilter(e.target.value);
+                    setFilePage(1);
+                  }}
+                  className="input-field"
+                >
+                  <option value="">Todos los tipos</option>
+                  <option value="profile">Fotos de perfil</option>
+                  <option value="expense">Archivos de gastos</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Filtrar por usuario (ID)
+                </label>
+                <input
+                  type="number"
+                  value={userFilter}
+                  onChange={(e) => {
+                    setUserFilter(e.target.value);
+                    setFilePage(1);
+                  }}
+                  placeholder="ID del usuario"
+                  className="input-field"
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Files List */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Archivos del sistema</h3>
+            </div>
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <LoadingSpinner />
+              </div>
+            ) : files.length === 0 ? (
+              <div className="text-center py-12">
+                <FiFile className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">No se encontraron archivos</h3>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">No hay archivos que coincidan con los filtros seleccionados.</p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Archivo
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Tipo
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Usuario
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Tamaño
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Fecha
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {files.map((file) => (
+                        <tr key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 w-10 h-10">
+                                {file.isImage ? (
+                                  <img
+                                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${file.downloadUrl}`}
+                                    alt={file.originalName}
+                                    className="w-10 h-10 object-cover rounded"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
+                                    <FiFile className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  {file.originalName}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {file.fileName}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              file.fileType === 'profile' 
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' 
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                            }`}>
+                              {file.fileType === 'profile' ? 'Perfil' : 'Gasto'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 dark:text-gray-100">{file.user.username}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{file.user.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            {formatFileSize(file.size)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            {new Date(file.createdAt).toLocaleDateString('es-ES')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={() => downloadFile(file)}
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                title="Descargar archivo"
+                              >
+                                <FiDownload className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteFile(file.id)}
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                title="Eliminar archivo"
+                              >
+                                <FiTrash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Pagination */}
+                {fileTotalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                        Página {filePage} de {fileTotalPages}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setFilePage(prev => Math.max(1, prev - 1))}
+                          disabled={filePage === 1}
+                          className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        >
+                          Anterior
+                        </button>
+                        <button
+                          onClick={() => setFilePage(prev => Math.min(fileTotalPages, prev + 1))}
+                          disabled={filePage === fileTotalPages}
+                          className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
