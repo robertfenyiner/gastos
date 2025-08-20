@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmailTemplateEditor from '../components/EmailTemplateEditor';
 import api from '../utils/api';
+import { getFileUrl } from '../utils/config';
 
 interface User {
   id: number;
@@ -1004,7 +1005,7 @@ const Admin: React.FC = () => {
                               <div className="flex-shrink-0 w-10 h-10">
                                 {file.isImage ? (
                                   <img
-                                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${file.downloadUrl}`}
+                                    src={getFileUrl(file.downloadUrl)}
                                     alt={file.originalName}
                                     className="w-10 h-10 object-cover rounded"
                                   />

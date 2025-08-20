@@ -5,6 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import AmountDisplay from '../components/AmountDisplay';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
+import { getExpenseFileUrl } from '../utils/config';
 
 interface Expense {
   id: number;
@@ -912,7 +913,7 @@ const Expenses: React.FC = () => {
                         <div className="flex-shrink-0">
                           {file.isImage ? (
                             <img
-                              src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/download/${file.id}`}
+                              src={getExpenseFileUrl(file.id)}
                               alt={file.originalName}
                               className="w-10 h-10 object-cover rounded"
                               onError={(e) => {

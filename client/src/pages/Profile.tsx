@@ -3,6 +3,7 @@ import { FiUser, FiMail, FiKey, FiSave, FiEye, FiEyeOff, FiSend, FiCamera, FiTra
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
+import { getProfilePictureUrl } from '../utils/config';
 
 const Profile: React.FC = () => {
   const { user, updateUser, profilePictureVersion } = useAuth();
@@ -36,7 +37,7 @@ const Profile: React.FC = () => {
     console.log('[PROFILE] useEffect triggered - user:', user?.profile_picture);
     
     if (user?.profile_picture) {
-      const newUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${user.profile_picture}?v=${profilePictureVersion}`;
+      const newUrl = getProfilePictureUrl(user.profile_picture, profilePictureVersion);
       console.log('[PROFILE] Setting new profile picture URL:', newUrl);
       setProfilePicture(newUrl);
     } else {
@@ -87,7 +88,7 @@ const Profile: React.FC = () => {
       console.log('[FRONTEND] Actualizando usuario con filename:', fileName);
       
       // Inmediatamente actualizar la URL local con timestamp para forzar recarga
-      const immediateUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${fileName}?t=${Date.now()}`;
+      const immediateUrl = getProfilePictureUrl(fileName, Date.now());
       setProfilePicture(immediateUrl);
       
       await updateUser({ profile_picture: fileName });

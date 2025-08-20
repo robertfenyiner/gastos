@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { getInitials } from '../utils/format';
 import ThemeToggle from './ThemeToggle';
+import { getProfilePictureUrl } from '../utils/config';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,9 +39,8 @@ const Layout: React.FC = () => {
 
   const isCurrentPath = (path: string) => location.pathname === path;
   
-  const getProfilePictureUrl = (filename: string) => {
-    const baseUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/profile/${filename}`;
-    return `${baseUrl}?v=${profilePictureVersion}`;
+  const getProfilePictureUrlWithVersion = (filename: string) => {
+    return getProfilePictureUrl(filename, profilePictureVersion);
   };
 
   return (
@@ -104,7 +104,7 @@ const Layout: React.FC = () => {
             <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white text-base font-bold overflow-hidden">
               {user?.profile_picture ? (
                 <img
-                  src={getProfilePictureUrl(user.profile_picture)}
+                  src={getProfilePictureUrlWithVersion(user.profile_picture)}
                   alt={user.username}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -157,7 +157,7 @@ const Layout: React.FC = () => {
               <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium lg:hidden overflow-hidden">
                 {user?.profile_picture ? (
                   <img
-                    src={getProfilePictureUrl(user.profile_picture)}
+                    src={getProfilePictureUrlWithVersion(user.profile_picture)}
                     alt={user.username}
                     className="w-full h-full object-cover"
                     onError={(e) => {
