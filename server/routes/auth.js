@@ -226,6 +226,7 @@ router.put('/change-password', authMiddleware, async (req, res) => {
 router.post('/test-email', authMiddleware, async (req, res) => {
   try {
     const user = req.user;
+    const { testEmail } = req.body;
 
     // Check if email service is configured
     if (!emailService.transporter) {
@@ -234,12 +235,30 @@ router.post('/test-email', authMiddleware, async (req, res) => {
       });
     }
 
+    // Validate email if provided
+    let recipientEmail = user.email;
+    if (testEmail) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(testEmail)) {
+        return res.status(400).json({ 
+          message: 'El formato del correo electrónico no es válido' 
+        });
+      }
+      recipientEmail = testEmail;
+    }
+
+    // Create a user object for the test email
+    const testUser = {
+      ...user,
+      email: recipientEmail
+    };
+
     // Send test email
-    await emailService.sendTestEmail(user);
+    await emailService.sendTestEmail(testUser);
     
     res.json({ 
       message: 'Correo de prueba enviado exitosamente',
-      recipient: user.email
+      recipient: recipientEmail
     });
 
   } catch (error) {

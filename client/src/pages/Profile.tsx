@@ -30,6 +30,7 @@ const Profile: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
   const profilePictureRef = useRef<HTMLInputElement>(null);
 
   // Load profile picture on component mount and when user changes
@@ -275,9 +276,24 @@ const Profile: React.FC = () => {
       setSuccessMessage('');
       setErrors({});
 
-      await api.post('/auth/test-email');
+      // Validate test email if provided
+      if (testEmail && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(testEmail)) {
+        setErrors({
+          testEmail: 'Por favor ingresa un correo electrónico válido'
+        });
+        return;
+      }
+
+      const requestBody = testEmail ? { testEmail } : {};
+      const response = await api.post('/auth/test-email', requestBody);
       
-      setSuccessMessage('Correo de prueba enviado correctamente. Revisa tu bandeja de entrada.');
+      const recipient = response.data.recipient || testEmail || user?.email;
+      setSuccessMessage(`Correo de prueba enviado correctamente a ${recipient}. Revisa la bandeja de entrada.`);
+      
+      // Clear test email field after successful send
+      if (testEmail) {
+        setTestEmail('');
+      }
     } catch (error: any) {
       console.error('Error al enviar el correo de prueba:', error);
       setErrors({
@@ -622,26 +638,53 @@ const Profile: React.FC = () => {
 
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Prueba la configuración de correo electrónico para verificar que los recordatorios de gastos recurrentes funcionen correctamente.
               </p>
-              <button
-                onClick={handleTestEmail}
-                disabled={emailLoading}
-                className="btn-primary flex items-center justify-center"
-              >
-                {emailLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    <span className="ml-2">Enviando...</span>
-                  </>
-                ) : (
-                  <>
-                    <FiSend className="w-4 h-4 mr-2" />
-                    Enviar correo de prueba
-                  </>
-                )}
-              </button>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Enviar prueba a (opcional)
+                  </label>
+                  <input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => {
+                      setTestEmail(e.target.value);
+                      if (errors.testEmail) {
+                        setErrors({ ...errors, testEmail: '' });
+                      }
+                    }}
+                    className={`input-field ${errors.testEmail ? 'border-red-300' : ''}`}
+                    placeholder={`Dejar vacío para enviar a ${user?.email || 'tu email'}`}
+                  />
+                  {errors.testEmail && (
+                    <p className="mt-1 text-sm text-red-600">{errors.testEmail}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Si no especificas un email, se enviará a tu email de perfil actual
+                  </p>
+                </div>
+                
+                <button
+                  onClick={handleTestEmail}
+                  disabled={emailLoading}
+                  className="btn-primary flex items-center justify-center"
+                >
+                  {emailLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      <span className="ml-2">Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiSend className="w-4 h-4 mr-2" />
+                      Enviar correo de prueba
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
