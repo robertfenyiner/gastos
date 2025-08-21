@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all expenses for user
 router.get('/', authMiddleware, (req, res) => {
   const userId = req.user.id;
-  const { page = 1, limit = 50, category, startDate, endDate, search } = req.query;
+  const { page = 1, limit = 50, category, startDate, endDate, search, sortBy = 'date', sortOrder = 'desc' } = req.query;
   const offset = (page - 1) * limit;
 
   let query = `
@@ -42,7 +42,18 @@ router.get('/', authMiddleware, (req, res) => {
     params.push(`%${search}%`);
   }
 
-  query += ' ORDER BY e.date DESC, e.created_at DESC LIMIT ? OFFSET ?';
+  // Dynamic sorting
+  const validSortFields = {
+    'date': 'e.date',
+    'amount': 'e.amount',
+    'description': 'e.description',
+    'category': 'c.name'
+  };
+  
+  const sortField = validSortFields[sortBy] || 'e.date';
+  const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
+  
+  query += ` ORDER BY ${sortField} ${order}, e.created_at DESC LIMIT ? OFFSET ?`;
   params.push(parseInt(limit), parseInt(offset));
 
   db.all(query, params, (err, expenses) => {
