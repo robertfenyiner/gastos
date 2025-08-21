@@ -30,15 +30,85 @@
 ## 🚀 Características
 
 ### ✨ Funcionalidades Principales
-- **👤 Gestión de Usuarios**: Sistema completo de registro y autenticación
-- **💸 Gestión de Gastos**: Crear, editar, eliminar y categorizar gastos
-- **🏷️ Categorías Personalizadas**: Organiza gastos con categorías y colores customizables
-- **💱 Múltiples Monedas**: Soporte para diferentes divisas con tasas actualizadas automáticamente
-- **🔄 Gastos Recurrentes**: Configura pagos que se repiten (mensual, semanal, etc.)
-- **📧 Recordatorios por Email**: Notificaciones automáticas para gastos próximos a vencer
-- **📄 Reportes PDF**: Genera extractos detallados de gastos en formato PDF
-- **📱 Responsive Design**: Optimizado para dispositivos móviles
-- **🔒 Seguridad Avanzada**: Autenticación JWT, encriptación bcrypt, y protección XSS
+
+#### 👤 **Sistema de Usuarios Completo**
+- **Registro y autenticación segura** con JWT tokens
+- **Perfiles personalizables** con fotos de perfil
+- **Gestión de contraseñas** con encriptación bcrypt (12 salt rounds)
+- **Recuperación de contraseñas** por email
+- **Panel administrativo** para gestión de usuarios
+
+#### 💸 **Gestión Avanzada de Gastos**
+- **CRUD completo** (Crear, Leer, Actualizar, Eliminar) de gastos
+- **Filtros inteligentes** por fecha, categoría, monto y descripción
+- **Ordenamiento dinámico** por fecha, monto, categoría o descripción
+- **Búsqueda en tiempo real** con resultados instantáneos
+- **Archivos adjuntos** para comprobantes (fotos, PDFs, documentos)
+- **Vista de detalles** con toda la información del gasto
+
+#### 🏷️ **Sistema de Categorías Flexible**
+- **Categorías personalizadas** con nombres descriptivos
+- **Colores personalizables** para identificación visual rápida
+- **Iconos representativos** para cada categoría
+- **Categorías predeterminadas** creadas automáticamente
+- **Estadísticas por categoría** con gráficos y porcentajes
+
+#### 💱 **Soporte Multi-Moneda Avanzado**
+- **7+ monedas soportadas**: USD, EUR, COP, CAD, GBP, JPY, MXN
+- **Tasas de cambio automáticas** actualizadas diariamente
+- **Conversión automática a COP** para reportes unificados
+- **API de tasas de cambio** integrada (exchangerate-api.com)
+- **Historial de tasas** para cálculos precisos
+- **Visualización dual** (moneda original + equivalente en COP)
+
+#### 🔄 **Gastos Recurrentes Inteligentes**
+- **Frecuencias flexibles**: diario, semanal, mensual, anual
+- **Recordatorios configurables** con días de anticipación
+- **Gestión automática** de fechas futuras
+- **Notificaciones por email** para gastos próximos
+- **Histórico de recurrencias** para seguimiento
+
+#### 📧 **Sistema de Notificaciones por Email**
+- **Recordatorios automáticos** para gastos recurrentes
+- **Resúmenes semanales** con estadísticas personalizadas
+- **Notificaciones de gastos importantes** con límites configurables
+- **Plantillas de email personalizables** con diseño responsive
+- **Configuración SMTP flexible** (Gmail, Outlook, otros)
+- **Envío asíncrono** para no afectar el rendimiento
+
+#### 📄 **Generación de Reportes Profesionales**
+- **Reportes PDF detallados** con gráficos y estadísticas
+- **Exportación a Excel** con hojas de cálculo organizadas
+- **Filtros personalizables** por período, categoría, moneda
+- **Gráficos interactivos** con Chart.js
+- **Estadísticas avanzadas**: totales, promedios, tendencias
+- **Descarga automática** o visualización en línea
+
+#### 📁 **Gestión de Archivos Adjuntos**
+- **Subida de comprobantes** para cada gasto (hasta 5 archivos)
+- **Formatos soportados**: imágenes (JPG, PNG, GIF), PDF, documentos
+- **Previsualización integrada** de imágenes y PDFs
+- **Validación de archivos** con límites de tamaño y tipo
+- **Almacenamiento organizado** con estructura de directorios
+- **Panel administrativo** para gestión global de archivos
+
+#### 🎨 **Interfaz de Usuario Moderna**
+- **Diseño responsive** optimizado para móvil, tablet y desktop
+- **Tema oscuro/claro** con alternancia automática
+- **Interfaz intuitiva** con navegación clara y accesible
+- **Componentes reutilizables** construidos con React y TypeScript
+- **Animaciones suaves** para mejor experiencia de usuario
+- **Accesibilidad completa** siguiendo estándares WCAG
+
+#### 🔒 **Seguridad de Nivel Empresarial**
+- **Autenticación JWT** con tokens seguros de larga duración
+- **Encriptación bcrypt** con 12 salt rounds para contraseñas
+- **Protección XSS** con validación y sanitización de inputs
+- **Protección SQL Injection** con consultas parametrizadas
+- **Rate limiting** contra ataques de fuerza bruta
+- **CORS restrictivo** con orígenes configurables
+- **Headers de seguridad** automáticos con Helmet.js
+- **Validación de permisos** en cada endpoint
 
 ### 🛡️ Características de Seguridad
 - **JWT Authentication**: Tokens seguros con expiración configurable
@@ -99,28 +169,33 @@
 
 ## ⚡ Instalación Rápida (VPS)
 
-### 🚀 Instalación con Un Solo Comando
+### 🚀 Instalación Automática Completa
 
-Para instalar **Gastos Robert** en tu VPS Ubuntu 22.04 (Oracle Cloud):
+Para instalar **Gastos Robert** en tu servidor Ubuntu 22.04:
 
 ```bash
+# 1. Clonar el repositorio
 git clone https://github.com/robertfenyiner/gastos.git
 cd gastos
-
-
 
 # 2. Crear usuario recomendado (si no existe)
 sudo adduser nina
 sudo usermod -aG sudo nina
 su - nina
 
-# 3. Hacer ejecutable el instalador y configurar .env
+# 3. Hacer ejecutable el instalador
 chmod +x instalar-gastos-robert.sh
-cp ~/gastos/server/.env.example ~/gastos/server/.env
 
-# 4. Ejecutar instalador automático como usuario nina
+# 4. Ejecutar instalador automático
 bash instalar-gastos-robert.sh
 ```
+
+### 📋 Requisitos Previos
+
+- **Ubuntu 22.04 LTS** (servidor VPS recomendado)
+- **Acceso sudo** para instalación de dependencias
+- **Mínimo 2GB RAM** y 10GB espacio libre
+- **Conexión a internet** estable
 
 ### 🎯 ¿Qué hace el instalador automático?
 
@@ -414,11 +489,45 @@ sudo dpkg-reconfigure -plow unattended-upgrades
 
 ### 🔄 Actualización de la Aplicación
 
+Para actualizar la aplicación a la última versión disponible en el repositorio:
+
+#### 🚀 Método Rápido (Recomendado)
 ```bash
-# Script de actualización automática incluido
+# Navegar al directorio de la aplicación
+cd /home/nina/gastos-robert
+
+# Descargar última versión desde el repositorio
+git pull origin main
+
+# Instalar nuevas dependencias y reconstruir el frontend
+cd client && npm run build
+
+# Volver al directorio raíz y recargar la aplicación
+cd .. && pm2 reload ecosystem.config.js --env production
+```
+
+#### 🛠️ Método con Script Automático
+```bash
+# Script de actualización automática incluido (si existe)
 cd ~/gastos
 sudo ./scripts/update-application.sh
 ```
+
+#### 📝 Verificación Post-Actualización
+```bash
+# Verificar que la aplicación esté funcionando correctamente
+pm2 status gastos-robert-api
+pm2 logs gastos-robert-api --lines 20
+
+# Verificar que el sitio web responda
+curl -f http://localhost:5000/api/health
+```
+
+#### ⚠️ Notas Importantes
+- **Siempre hacer backup** antes de actualizar: `sudo /usr/local/bin/backup-gastos-robert.sh`
+- **Revisar logs** después de la actualización para verificar que no haya errores
+- **La aplicación se recarga automáticamente** sin tiempo de inactividad usando PM2
+- **Si hay cambios en el `.env`**, revisa el archivo `.env.example` para nuevas configuraciones
 
 ---
 

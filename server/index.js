@@ -1,50 +1,87 @@
+// Cargar variables de entorno desde el archivo .env
+// Esto debe ser la primera línea para asegurar que todas las configuraciones estén disponibles
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const path = require('path');
 
-// Importar base de datos para inicializar tablas
+// Importar librerías principales de Express y middleware de seguridad
+const express = require('express');
+const cors = require('cors');              // Control de acceso entre orígenes (CORS)
+const helmet = require('helmet');          // Headers de seguridad HTTP
+const rateLimit = require('express-rate-limit'); // Limitación de velocidad para prevenir ataques
+const path = require('path');              // Manejo de rutas de archivos
+
+// Inicializar la base de datos SQLite y crear tablas si no existen
+// Esto debe ejecutarse temprano para asegurar que la BD esté lista
 require('./database');
 
-// Inicializar servicio de email
+// Inicializar el servicio de envío de emails para recordatorios y notificaciones
+// Configura nodemailer y schedules para envío automático de emails
 require('./services/emailService');
 
-// Inicializar servicio de monedas
+// Inicializar el servicio de monedas para conversión de tipos de cambio
+// Configura las tasas de cambio automáticas usando APIs externas
 require('./services/currencyService');
 
-// Importar rutas
-const authRoutes = require('./routes/auth');
-const expenseRoutes = require('./routes/expenses');
-const categoryRoutes = require('./routes/categories');
-const currencyRoutes = require('./routes/currencies');
-const reportRoutes = require('./routes/reports');
-const adminRoutes = require('./routes/admin');
-const backupRoutes = require('./routes/backup');
-const fileRoutes = require('./routes/files');
+// Importar todas las rutas de la API REST
+// Cada archivo de rutas maneja un grupo específico de endpoints
+const authRoutes = require('./routes/auth');         // Autenticación: login, registro, JWT
+const expenseRoutes = require('./routes/expenses');   // Gestión de gastos: CRUD, filtros, reportes
+const categoryRoutes = require('./routes/categories'); // Gestión de categorías personalizadas
+const currencyRoutes = require('./routes/currencies'); // Gestión de monedas soportadas
+const reportRoutes = require('./routes/reports');     // Generación de reportes PDF y Excel
+const adminRoutes = require('./routes/admin');       // Panel de administración para usuarios admin
+const backupRoutes = require('./routes/backup');     // Sistema de respaldos de la base de datos
+const fileRoutes = require('./routes/files');       // Gestión de archivos adjuntos y fotos de perfil
 
+// Crear instancia de la aplicación Express
 const app = express();
-// Permitir que Express confíe en el proxy (Nginx) para X-Forwarded-For
+
+// Configurar Express para confiar en proxies (como Nginx)
+// Esto es esencial para obtener la IP real del cliente cuando se usa proxy reverso
 app.set('trust proxy', 1);
+
+// Definir el puerto del servidor - usar variable de entorno o puerto 5000 por defecto
 const PORT = process.env.PORT || 5000;
 
-// Middleware de seguridad
+// ========================================
+// CONFIGURACIÓN DE SEGURIDAD AVANZADA
+// ========================================
+
+// Aplicar middleware de seguridad Helmet.js
+// Establece varios headers HTTP de seguridad automáticamente para proteger contra
+// ataques comunes como XSS, clickjacking, MIME sniffing, etc.
 app.use(helmet());
 
-// Deshabilitar x-powered-by por seguridad
+// Deshabilitar el header X-Powered-By que revela información sobre Express
+// Esto evita que atacantes sepan que tecnología está usando el servidor
 app.disable('x-powered-by');
 
-// Manejo de errores globales del proceso (debe ir antes de app.listen)
+// ========================================
+// MANEJO DE ERRORES GLOBALES DEL PROCESO
+// ========================================
+
+// Manejar excepciones no capturadas en cualquier parte de la aplicación
+// Esto previene que el servidor se cuelgue silenciosamente ante errores críticos
 process.on('uncaughtException', (err) => {
-  console.error(`[${new Date().toISOString()}] Uncaught Exception:`, err);
-  // Opcional: notificar por email/log externo antes de salir
+  console.error(`[${new Date().toISOString()}] ERROR CRÍTICO - Excepción no capturada:`, err);
+  console.error('Stack trace completo:', err.stack);
+  
+  // En el futuro se puede agregar notificación por email o servicio de logs externos
+  // Por ejemplo: enviar notificación a administradores sobre el error crítico
+  
+  // Salir del proceso de forma controlada para evitar estado inconsistente
   process.exit(1);
 });
 
+// Manejar promesas rechazadas que no fueron capturadas
+// Esto ocurre cuando se usa async/await o .then() sin .catch() apropiado
 process.on('unhandledRejection', (reason, promise) => {
-  console.error(`[${new Date().toISOString()}] Unhandled Rejection:`, reason);
-  // Opcional: notificar por email/log externo antes de salir
+  console.error(`[${new Date().toISOString()}] ERROR CRÍTICO - Promesa rechazada no manejada:`, reason);
+  console.error('Promesa que falló:', promise);
+  
+  // En el futuro se puede agregar logging más sofisticado o notificaciones
+  // Por ejemplo: integración con servicios como Sentry, LogRocket, etc.
+  
+  // Salir del proceso para evitar comportamiento impredecible
   process.exit(1);
 });
 

@@ -1,17 +1,35 @@
-const nodemailer = require('nodemailer');
-const cron = require('node-cron');
-const db = require('../database');
+// Importar librerías necesarias para el servicio de email
+const nodemailer = require('nodemailer');  // Librería para envío de emails
+const cron = require('node-cron');         // Programador de tareas automáticas (cron jobs)
+const db = require('../database');         // Conexión a la base de datos SQLite
 
+/**
+ * Servicio de Email para Gastos Robert
+ * 
+ * Este servicio maneja todas las funcionalidades relacionadas con el envío de emails:
+ * - Configuración automática de SMTP
+ * - Envío de recordatorios de gastos recurrentes
+ * - Resúmenes semanales de gastos
+ * - Emails de prueba para verificar configuración
+ * - Programación automática de envíos usando cron jobs
+ * - Plantillas HTML responsivas para emails
+ */
 class EmailService {
   constructor() {
+    // Inicializar el transporter de nodemailer como null
     this.transporter = null;
+    
+    // Configurar la conexión SMTP usando variables de entorno
     this.initializeTransporter();
+    
+    // Programar las verificaciones automáticas de recordatorios
     this.scheduleReminderChecks();
   }
 
   initializeTransporter() {
     if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('Email configuration not found. Email reminders will be disabled.');
+      console.warn('⚠️  Configuración de email no encontrada. Los recordatorios por email estarán deshabilitados.');
+      console.warn('💡 Para habilitar emails, configura EMAIL_HOST, EMAIL_USER y EMAIL_PASS en el archivo .env');
       return;
     }
 
@@ -25,12 +43,13 @@ class EmailService {
       },
     });
 
-    // Verify connection configuration
+    // Verificar que la configuración de conexión sea válida
     this.transporter.verify((error, success) => {
       if (error) {
-        console.error('Email configuration error:', error);
+        console.error('❌ Error en la configuración de email:', error.message);
+        console.error('💡 Verifica que EMAIL_HOST, EMAIL_USER y EMAIL_PASS sean correctos');
       } else {
-        console.log('Email service ready');
+        console.log('✅ Servicio de email configurado correctamente y listo para usar');
       }
     });
   }

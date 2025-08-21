@@ -1,84 +1,146 @@
 #!/bin/bash
 
-# Expense Tracker Installation Script for Ubuntu 22.04
-# This script automates the installation and configuration process
-# Usage: sudo ./install-ubuntu-22.04.sh
+# Script de Instalación de Gastos Robert para Ubuntu 22.04
+# Este script automatiza completamente el proceso de instalación y configuración 
+# de la aplicación de gestión de gastos personales "Gastos Robert"
+# 
+# Funcionalidades que instala:
+# - Servidor Node.js con API REST
+# - Base de datos SQLite
+# - Interfaz web React con Tailwind CSS
+# - Sistema de autenticación JWT
+# - Gestión de archivos adjuntos
+# - Envío de emails y recordatorios
+# - Soporte para múltiples monedas
+# - Generación de reportes en PDF y Excel
+# - Respaldos automáticos
+# - Configuración SSL/HTTPS
+# - Servidor web Nginx como proxy reverso
+# 
+# Uso: sudo ./install-ubuntu-22.04.sh
+# Asegúrate de ejecutar como root (con sudo) para instalar dependencias del sistema
 
-set -e  # Exit on error
+set -e  # Salir inmediatamente si cualquier comando falla
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Códigos de colores para mejorar la legibilidad de la salida en terminal
+RED='\033[0;31m'    # Rojo para errores
+GREEN='\033[0;32m'  # Verde para información exitosa
+YELLOW='\033[1;33m' # Amarillo para advertencias
+BLUE='\033[0;34m'   # Azul para pasos del proceso
+NC='\033[0m'        # Sin color (reset)
 
-# Configuration
-APP_NAME="expense-tracker"
-APP_DIR="/opt/$APP_NAME"
-LOG_FILE="/var/log/$APP_NAME-install.log"
-DOMAIN=""
-EMAIL=""
-GIT_REPO=""
+# Variables de configuración global de la aplicación
+APP_NAME="gastos-robert"                        # Nombre interno de la aplicación
+APP_DIR="/opt/$APP_NAME"                        # Directorio donde se instalará la aplicación
+LOG_FILE="/var/log/$APP_NAME-instalacion.log"  # Archivo donde se guardan los logs de instalación
+DOMAIN=""                                       # Dominio personalizado (opcional)
+EMAIL=""                                        # Email para certificado SSL (opcional)
+GIT_REPO=""                                     # URL del repositorio Git
 
-# Logging functions
+# Funciones para registro de logs y salida formateada
+# Estas funciones permiten mostrar mensajes con colores y guardarlos en el archivo de log
+
+# Función base para logging - escribe tanto en pantalla como en archivo de log
 log() {
     echo -e "${1}" | tee -a "$LOG_FILE"
 }
 
+# Muestra mensajes informativos en color verde
 log_info() {
     log "${GREEN}[INFO]${NC} $1"
 }
 
+# Muestra advertencias en color amarillo  
 log_warn() {
-    log "${YELLOW}[WARN]${NC} $1"
+    log "${YELLOW}[ADVERTENCIA]${NC} $1"
 }
 
+# Muestra errores en color rojo
 log_error() {
     log "${RED}[ERROR]${NC} $1"
 }
 
+# Muestra pasos del proceso en color azul
 log_step() {
-    log "${BLUE}[STEP]${NC} $1"
+    log "${BLUE}[PASO]${NC} $1"
 }
 
-# Check if running as root
+# Verificar que el script se ejecute como root (administrador)
+# Esto es necesario para instalar paquetes del sistema y configurar servicios
 check_root() {
     if [ "$EUID" -ne 0 ]; then
-        log_error "This script must be run as root (use sudo)"
+        log_error "Este script debe ejecutarse como root (usa sudo)"
+        log_error "Ejemplo: sudo ./install-ubuntu-22.04.sh"
         exit 1
     fi
 }
 
-# Collect user inputs
+# Recopilar información de configuración del usuario
+# Esta función solicita los datos necesarios para personalizar la instalación
 collect_inputs() {
-    log_step "Collecting configuration information..."
+    log_step "Recopilando información de configuración..."
     
-    echo "Please provide the following information:"
+    echo ""
+    echo "==================================================================="
+    echo "       CONFIGURACIÓN DE INSTALACIÓN - GASTOS ROBERT"
+    echo "==================================================================="
+    echo "Por favor proporciona la siguiente información:"
+    echo ""
     
+    # Solicitar URL del repositorio Git (obligatorio)
     while [ -z "$GIT_REPO" ]; do
-        read -p "Git repository URL: " GIT_REPO
+        echo "1. URL del repositorio Git:"
+        echo "   Ejemplo: https://github.com/tu-usuario/gastos-robert.git"
+        read -p "   URL del repositorio: " GIT_REPO
+        if [ -z "$GIT_REPO" ]; then
+            echo "   ⚠️  La URL del repositorio es obligatoria"
+            echo ""
+        fi
     done
     
-    read -p "Domain name (optional, press enter to skip): " DOMAIN
+    echo ""
     
+    # Solicitar dominio (opcional)
+    echo "2. Nombre de dominio (opcional):"
+    echo "   Si tienes un dominio, se configurará SSL automáticamente"
+    echo "   Ejemplo: gastos.miempresa.com"
+    read -p "   Dominio (presiona Enter para omitir): " DOMAIN
+    
+    # Si se proporciona dominio, solicitar email para SSL
     if [ -n "$DOMAIN" ]; then
-        read -p "Email for SSL certificate (required for SSL): " EMAIL
+        echo ""
+        echo "3. Email para certificado SSL:"
+        echo "   Necesario para generar certificados Let's Encrypt"
+        read -p "   Email: " EMAIL
+        
+        if [ -z "$EMAIL" ]; then
+            log_warn "Sin email, se omitirá la configuración SSL"
+            DOMAIN=""
+        fi
     fi
     
+    # Mostrar resumen de configuración
     echo ""
-    log_info "Configuration:"
-    log_info "  - Git Repository: $GIT_REPO"
-    log_info "  - Domain: ${DOMAIN:-'Not configured'}"
-    log_info "  - Email: ${EMAIL:-'Not provided'}"
+    echo "==================================================================="
+    log_info "RESUMEN DE CONFIGURACIÓN:"
+    log_info "  📁 Repositorio Git: $GIT_REPO"
+    log_info "  🌐 Dominio: ${DOMAIN:-'No configurado (usará IP del servidor)'}"
+    log_info "  📧 Email: ${EMAIL:-'No proporcionado'}"
+    log_info "  📂 Directorio de instalación: $APP_DIR"
+    log_info "  📝 Archivo de logs: $LOG_FILE"
+    echo "==================================================================="
     echo ""
     
-    read -p "Continue with installation? (y/N): " -n 1 -r
-    echo
+    # Confirmación para continuar
+    read -p "¿Continuar con la instalación? (y/N): " -n 1 -r
+    echo ""
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Installation cancelled"
+        log_info "Instalación cancelada por el usuario"
         exit 0
     fi
+    
+    echo ""
+    log_info "Iniciando instalación..."
 }
 
 # Update system
