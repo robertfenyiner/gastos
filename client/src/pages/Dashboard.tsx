@@ -80,8 +80,8 @@ const Dashboard: React.FC = () => {
               <FiDollarSign className="w-6 h-6 text-primary-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total en COP</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total en COP</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 ${totalAmountCOP.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
               </p>
             </div>
@@ -94,8 +94,8 @@ const Dashboard: React.FC = () => {
               <FiTrendingUp className="w-6 h-6 text-success-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total de Gastos</p>
-              <p className="text-2xl font-bold text-gray-900">{totalExpenses}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Gastos</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalExpenses}</p>
             </div>
           </div>
         </div>
@@ -106,8 +106,8 @@ const Dashboard: React.FC = () => {
               <FiCalendar className="w-6 h-6 text-warning-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Esta Semana</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Esta Semana</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 ${weeklyAmount.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
               </p>
             </div>
@@ -120,8 +120,8 @@ const Dashboard: React.FC = () => {
               <FiTrendingUp className="w-6 h-6 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Gastos Recurrentes</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Gastos Recurrentes</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {recurringCount}
               </p>
             </div>
@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Acciones rápidas</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Acciones rápidas</h3>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Link
@@ -169,7 +169,7 @@ const Dashboard: React.FC = () => {
       {/* Recent Expenses */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Gastos recientes</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Gastos recientes</h3>
           <Link
             to="/expenses"
             className="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -190,11 +190,11 @@ const Dashboard: React.FC = () => {
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-72 overflow-y-auto">
             {recentExpenses.map((expense) => (
               <div
                 key={expense.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
               >
                 <div className="flex items-center">
                   <div
@@ -204,10 +204,10 @@ const Dashboard: React.FC = () => {
                     {expense.category_name.charAt(0)}
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {expense.description}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {expense.category_name} • {formatDateShort(expense.date)}
                     </p>
                   </div>
@@ -233,27 +233,27 @@ const Dashboard: React.FC = () => {
       {stats && stats.categoryStats.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Gasto por categoría</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Gasto por categoría</h3>
           </div>
-          <div className="space-y-3">
-            {stats.categoryStats.slice(0, 5).map((category, index) => {
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {stats.categoryStats.map((category, index) => {
               const percentage = totalAmount > 0 ? (category.total_amount / totalAmount) * 100 : 0;
               return (
-                <div key={index} className="flex items-center">
+                <div key={index} className="flex items-center py-2">
                   <div
-                    className="w-4 h-4 rounded-full mr-3"
+                    className="w-4 h-4 rounded-full mr-3 flex-shrink-0"
                     style={{ backgroundColor: category.category_color }}
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {category.category_name}
                       </span>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 ml-2 flex-shrink-0">
                         ${category.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                       <div
                         className="h-2 rounded-full"
                         style={{
@@ -274,44 +274,44 @@ const Dashboard: React.FC = () => {
       {currencyStats && currencyStats.currencyStats.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Gastos por moneda</h3>
-            <span className="text-sm text-gray-500">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Gastos por moneda</h3>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               Total equivalente en COP: ${totalAmountCOP.toLocaleString('es-CO')}
             </span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
             {currencyStats.currencyStats.map((currency: any, index: number) => {
               const percentage = totalAmountCOP > 0 ? (currency.total_amount_cop / totalAmountCOP) * 100 : 0;
               return (
-                <div key={index} className="border rounded-lg p-4">
+                <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center">
-                      <span className="text-lg font-medium mr-2">{currency.currency_symbol}</span>
-                      <div>
-                        <span className="text-sm font-medium text-gray-900">
+                    <div className="flex items-center min-w-0 flex-1">
+                      <span className="text-lg font-medium mr-2 flex-shrink-0">{currency.currency_symbol}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 block truncate">
                           {currency.currency_name} ({currency.currency_code})
                         </span>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           {currency.expense_count} gasto{currency.expense_count !== 1 ? 's' : ''}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-900">
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {currency.currency_symbol}{currency.total_amount_original?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         ≈ ${currency.total_amount_cop?.toLocaleString('es-CO')} COP
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                     <div
                       className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {percentage.toFixed(1)}% del total
                   </div>
                 </div>
