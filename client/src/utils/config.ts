@@ -1,7 +1,6 @@
 // Configuración centralizada para URLs
 export const getApiBaseUrl = (): string => {
-  // Para producción, usar directamente la IP del servidor
-  return 'http://5.189.146.163';
+  return window.location.origin;
 };
 
 export const getFileUrl = (path: string): string => {
