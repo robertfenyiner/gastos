@@ -46,10 +46,9 @@ const PORT = process.env.PORT || 5000;
 // CONFIGURACIÓN DE SEGURIDAD AVANZADA
 // ========================================
 
-// Aplicar middleware de seguridad Helmet.js
-// Establece varios headers HTTP de seguridad automáticamente para proteger contra
-// ataques comunes como XSS, clickjacking, MIME sniffing, etc.
-app.use(helmet());
+// Helmet desactivado temporalmente para diagnóstico de render en cliente móvil.
+// Rehabilitar luego con una política compatible.
+// app.use(helmet());
 
 // Deshabilitar el header X-Powered-By que revela información sobre Express
 // Esto evita que atacantes sepan que tecnología está usando el servidor
@@ -127,29 +126,36 @@ app.use('/api/auth/register', authLimiter);
 // Configuración CORS
 const corsOptions = {
   origin: (origin, callback) => {
-    // Permitir requests sin origin (mobile apps, etc.)
+    // Permitir requests sin origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    // Permitir el origen del frontend en producción
+
+    const configuredOrigins = (process.env.ALLOWED_ORIGINS || '').trim();
+    if (configuredOrigins === '*') {
+      return callback(null, true);
+    }
+
     const defaultDevOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001'];
     let allowedOrigins = defaultDevOrigins;
+
     if (process.env.NODE_ENV === 'production') {
-      if (process.env.ALLOWED_ORIGINS && process.env.ALLOWED_ORIGINS.trim() !== '') {
-        allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean);
+      if (configuredOrigins !== '') {
+        allowedOrigins = configuredOrigins.split(',').map(o => o.trim()).filter(Boolean);
       } else {
-        // Detectar IP pública y permitirla automáticamente
         const publicIp = process.env.PUBLIC_IP || null;
         if (publicIp) {
           allowedOrigins = [`http://${publicIp}`];
         }
       }
     }
-    // Mostrar orígenes permitidos en consola para depuración
+
     if (process.env.NODE_ENV === 'production') {
-      console.log(`[CORS] Orígenes permitidos:`, allowedOrigins);
+      console.log(`[CORS] Orígenes permitidos:`, configuredOrigins === '*' ? ['*'] : allowedOrigins);
     }
+
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+
     console.warn(`CORS bloqueó petición desde origen: ${origin}`);
     callback(new Error('No permitido por CORS'));
   },

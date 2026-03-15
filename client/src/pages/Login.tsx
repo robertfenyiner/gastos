@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { FiEye, FiEyeOff, FiDollarSign } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,7 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -26,6 +27,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
+      navigate('/');
     } catch (error: any) {
       setError('root', { message: error.message });
     } finally {
