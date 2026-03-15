@@ -58,16 +58,19 @@ function detectDate(text) {
   const lower = text.toLowerCase();
   if (lower.includes('ayer')) return yesterday();
   if (lower.includes('hoy')) return today();
-  const m = lower.match(/(20\d{2}-\d{2}-\d{2})/);
-  return m ? m[1] : today();
+  const iso = lower.match(/(20\d{2}-\d{2}-\d{2})/);
+  if (iso) return iso[1];
+  return today();
 }
 
 function detectCurrency(text) {
+  const lower = text.toLowerCase();
   const upper = text.toUpperCase();
-  if (upper.includes('TRY') || text.toLowerCase().includes('lira')) return 'TRY';
-  if (upper.includes('USD') || text.toLowerCase().includes('dolar')) return 'USD';
-  if (upper.includes('NGN') || text.toLowerCase().includes('naira')) return 'NGN';
-  if (upper.includes('COP') || text.toLowerCase().includes('peso')) return 'COP';
+  if (upper.includes('TRY') || lower.includes('lira')) return 'TRY';
+  if (upper.includes('USD') || lower.includes('dólar') || lower.includes('dolar')) return 'USD';
+  if (upper.includes('NGN') || lower.includes('naira')) return 'NGN';
+  if (upper.includes('EUR') || lower.includes('euro')) return 'EUR';
+  if (upper.includes('COP') || lower.includes('peso')) return 'COP';
   return 'COP';
 }
 
@@ -89,21 +92,35 @@ function parseAmount(text) {
   return null;
 }
 
+function cleanDescription(text) {
+  return text
+    .replace(/\b(hoy|ayer|mensual|semanal|anual|diario)\b/gi, '')
+    .replace(/\b(cop|usd|try|ngn|eur|peso|pesos|dolar|dólar|lira|naira|euro)\b/gi, '')
+    .replace(/\b(agrega|añade|anota|registra|registra\s+un|registra\s+una|gasto|gastos|de|por|pago|pagué|pague)\b/gi, '')
+    .replace(/\d+(?:[\.,]\d+)?\s*mil\b/gi, '')
+    .replace(/\d+(?:[\.,]\d+)?/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function inferCategory(description, categories) {
   const d = description.toLowerCase();
   const rules = [
-    [/youtube|spotify|disney|netflix|amazon|stream|prime/, ['Entretenimiento', 'Suscripciones']],
-    [/uber|taxi|bus|gasolina|transporte|peaje/, ['Transporte']],
-    [/almuerzo|comida|restaurante|cafe|mercado|super/, ['Alimentación']],
-    [/medico|farmacia|salud|eps/, ['Salud']],
-    [/arriendo|servicio|internet|luz|agua/, ['Servicios', 'Hogar']],
+    [/youtube|spotify|disney|netflix|amazon|prime|hbo|max|stream|suscrip|apple music|deezer/, ['Entretenimiento', 'Suscripciones']],
+    [/uber|didi|taxi|cabify|bus|metro|gasolina|combustible|peaje|transporte/, ['Transporte']],
+    [/almuerzo|comida|restaurante|cafe|café|mercado|super|d1|ara|exito|éxito|jumbo|olimpica|olímpica/, ['Alimentación']],
+    [/medico|médico|farmacia|salud|eps|doctor|medicina|odont|gatos|veterin/, ['Salud']],
+    [/arriendo|internet|luz|agua|servicio|hogar|gas\b/, ['Servicios', 'Hogar']],
+    [/ropa|camisa|pantalon|pantalón|zapato|tenis/, ['Compras']],
   ];
+
   for (const [regex, names] of rules) {
     if (regex.test(d)) {
       const found = categories.find(c => names.some(n => c.name.toLowerCase() === n.toLowerCase()));
       if (found) return found;
     }
   }
+
   return categories[0];
 }
 
@@ -225,18 +242,15 @@ async function handleNatural(token, text) {
     const currency = detectCurrency(text);
     const recurringFrequency = detectRecurring(text);
     const date = detectDate(text);
-    let description = text
-      .replace(/\b(hoy|ayer|mensual|semanal|anual|diario)\b/gi, '')
-      .replace(/\b(cop|usd|try|ngn|peso|dolar|lira|naira)\b/gi, '')
-      .replace(/\b(agrega|añade|anota|registra|gasto|de)\b/gi, '')
-      .replace(/\d+(?:[\.,]\d+)?\s*mil\b/gi, '')
-      .replace(/\d+(?:[\.,]\d+)?/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    let description = cleanDescription(text);
     if (!description) description = 'Gasto registrado por chat';
     const category = inferCategory(description, categories);
     const data = await addExpense(token, { description, amount, category: category.name, currency, date, recurringFrequency });
-    return { action: 'add-expense', expense: summarizeExpense(data.expense) };
+    return {
+      action: 'add-expense',
+      interpreted: { description, amount, currency, date, category: category.name, recurringFrequency },
+      expense: summarizeExpense(data.expense)
+    };
   }
 
   throw new Error('No pude interpretar la instrucción');
