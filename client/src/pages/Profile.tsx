@@ -214,10 +214,11 @@ const Profile: React.FC = () => {
         email: profileForm.email.trim().toLowerCase()
       });
 
+      if (response.data?.user) {
+        await updateUser(response.data.user);
+      }
+
       setSuccessMessage('Perfil actualizado correctamente');
-      
-      // Update local user data (this would typically be handled by the auth context)
-      // You might want to add an updateUser method to your AuthContext
       
     } catch (error: any) {
       console.error('Error al actualizar el perfil:', error);
@@ -395,10 +396,10 @@ const Profile: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-24 sm:pb-8">
         {/* Profile Information */}
-        <div className="bg-white shadow-sm rounded-lg border">
-          <div className="p-6">
+        <div className="bg-white shadow-sm rounded-lg border mb-4 sm:mb-0">
+          <div className="p-6 pb-8 sm:pb-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <FiUser className="w-5 h-5 mr-2" />
               Información de perfil
@@ -475,8 +476,8 @@ const Profile: React.FC = () => {
         </div>
 
         {/* Password Change */}
-        <div className="bg-white shadow-sm rounded-lg border">
-          <div className="p-6">
+        <div className="bg-white shadow-sm rounded-lg border mb-8 sm:mb-0">
+          <div className="p-6 pb-10 sm:pb-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <FiKey className="w-5 h-5 mr-2" />
               Cambiar contraseña

@@ -222,6 +222,62 @@ router.put('/change-password', authMiddleware, async (req, res) => {
   }
 });
 
+// Update profile
+router.put('/profile', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { username, email } = req.body;
+
+    if (!username || !email) {
+      return res.status(400).json({ message: 'Usuario y correo son obligatorios' });
+    }
+
+    const cleanUsername = String(username).trim();
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    if (cleanUsername.length < 3 || cleanUsername.length > 30) {
+      return res.status(400).json({ message: 'El usuario debe tener entre 3 y 30 caracteres' });
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(cleanUsername)) {
+      return res.status(400).json({ message: 'El usuario solo puede contener letras, números, guiones y guiones bajos' });
+    }
+
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Correo electrónico inválido' });
+    }
+
+    db.get('SELECT id FROM users WHERE (email = ? OR username = ?) AND id != ?', [cleanEmail, cleanUsername, userId], (err, existingUser) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error de base de datos' });
+      }
+
+      if (existingUser) {
+        return res.status(400).json({ message: 'El usuario o correo ya está en uso' });
+      }
+
+      db.run('UPDATE users SET username = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [cleanUsername, cleanEmail, userId], function(updateErr) {
+        if (updateErr) {
+          return res.status(500).json({ message: 'Error al actualizar el perfil' });
+        }
+
+        db.get('SELECT id, username, email, is_admin, profile_picture, created_at, updated_at FROM users WHERE id = ?', [userId], (selectErr, user) => {
+          if (selectErr) {
+            return res.status(500).json({ message: 'Perfil actualizado, pero no se pudo leer el usuario' });
+          }
+
+          return res.json({
+            message: 'Perfil actualizado correctamente',
+            user
+          });
+        });
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
 // Test email functionality
 router.post('/test-email', authMiddleware, async (req, res) => {
   try {
