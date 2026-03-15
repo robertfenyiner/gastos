@@ -8,12 +8,10 @@ class CurrencyService {
   }
 
   scheduleExchangeRateUpdates() {
-    // Update exchange rates every day at 6 AM
     cron.schedule('0 6 * * *', () => {
       this.updateExchangeRates();
     });
 
-    // Initial update on startup (after 10 seconds delay)
     setTimeout(() => {
       this.updateExchangeRates();
     }, 10000);
@@ -22,103 +20,43 @@ class CurrencyService {
   }
 
   async updateExchangeRates() {
-    if (!process.env.EXCHANGE_API_KEY) {
-      console.log('Clave de API de tipo de cambio no configurada, omitiendo actualización');
-      return;
-    }
-
     try {
-      console.log('Actualizando tasas de cambio...');
-      
-      // Using exchangerate-api.com as primary source
-      const response = await axios.get(
-        `https://v6.exchangerate-api.com/v6/${process.env.EXCHANGE_API_KEY}/latest/USD`,
-        { timeout: 10000 }
-      );
+      console.log('Actualizando tasas de cambio (open.er-api.com)...');
 
-      const rates = response.data.conversion_rates;
+      const response = await axios.get('https://open.er-api.com/v6/latest/USD', {
+        timeout: 10000,
+      });
+
+      if (response.data?.result !== 'success' || !response.data?.rates) {
+        throw new Error('Respuesta inválida del servicio de tasas');
+      }
+
+      const rates = response.data.rates;
+      rates.USD = 1;
+
       let updatedCount = 0;
 
-      // Update rates in database
       for (const [currencyCode, rate] of Object.entries(rates)) {
         try {
           await new Promise((resolve, reject) => {
             db.run(
               'UPDATE currencies SET exchange_rate = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?',
               [rate, currencyCode],
-              function(err) {
-                if (err) {
-                  reject(err);
-                } else {
-                  if (this.changes > 0) {
-                    updatedCount++;
-                  }
-                  resolve();
-                }
+              function (err) {
+                if (err) return reject(err);
+                if (this.changes > 0) updatedCount++;
+                resolve();
               }
             );
           });
         } catch (error) {
-          console.error(`Error al actualizar la tasa para ${currencyCode}:`, error);
+          console.error(`Error al actualizar la tasa para ${currencyCode}:`, error.message || error);
         }
       }
 
       console.log(`Tasas de cambio actualizadas correctamente. ${updatedCount} monedas actualizadas.`);
-      
     } catch (error) {
       console.error('Error al actualizar las tasas de cambio:', error.message);
-      
-      // Fallback to fixer.io if primary API fails
-      if (process.env.FIXER_API_KEY) {
-        await this.updateExchangeRatesWithFixer();
-      }
-    }
-  }
-
-  async updateExchangeRatesWithFixer() {
-    try {
-      console.log('Intentando servicio alternativo de tasas de cambio...');
-      
-      const response = await axios.get(
-        `http://data.fixer.io/api/latest?access_key=${process.env.FIXER_API_KEY}&base=USD`,
-        { timeout: 10000 }
-      );
-
-      if (!response.data.success) {
-        throw new Error('La API de Fixer.io devolvió un error');
-      }
-
-      const rates = response.data.rates;
-      let updatedCount = 0;
-
-      // Update rates in database
-      for (const [currencyCode, rate] of Object.entries(rates)) {
-        try {
-          await new Promise((resolve, reject) => {
-            db.run(
-              'UPDATE currencies SET exchange_rate = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?',
-              [rate, currencyCode],
-              function(err) {
-                if (err) {
-                  reject(err);
-                } else {
-                  if (this.changes > 0) {
-                    updatedCount++;
-                  }
-                  resolve();
-                }
-              }
-            );
-          });
-        } catch (error) {
-          console.error(`Error al actualizar la tasa para ${currencyCode}:`, error);
-        }
-      }
-
-      console.log(`Tasas de cambio alternativas actualizadas correctamente. ${updatedCount} monedas actualizadas.`);
-      
-    } catch (error) {
-      console.error('La actualización alternativa de tasas de cambio también falló:', error.message);
     }
   }
 
@@ -130,12 +68,11 @@ class CurrencyService {
           convertedAmount: amount,
           fromCurrency,
           toCurrency,
-          exchangeRate: 1
+          exchangeRate: 1,
         });
         return;
       }
 
-      // Get exchange rates for both currencies
       db.all(
         'SELECT code, exchange_rate FROM currencies WHERE code IN (?, ?)',
         [fromCurrency, toCurrency],
@@ -150,10 +87,14 @@ class CurrencyService {
             return;
           }
 
-          const fromRate = currencies.find(c => c.code === fromCurrency)?.exchange_rate || 1;
-          const toRate = currencies.find(c => c.code === toCurrency)?.exchange_rate || 1;
+          const fromRate = Number(currencies.find(c => c.code === fromCurrency)?.exchange_rate || 1);
+          const toRate = Number(currencies.find(c => c.code === toCurrency)?.exchange_rate || 1);
 
-          // Convert to USD first, then to target currency
+          if (!fromRate || !toRate) {
+            reject(new Error('Tasa de cambio inválida'));
+            return;
+          }
+
           const usdAmount = amount / fromRate;
           const convertedAmount = usdAmount * toRate;
           const exchangeRate = toRate / fromRate;
@@ -163,7 +104,7 @@ class CurrencyService {
             convertedAmount: Math.round(convertedAmount * 100) / 100,
             fromCurrency,
             toCurrency,
-            exchangeRate: Math.round(exchangeRate * 10000) / 10000
+            exchangeRate: Math.round(exchangeRate * 1000000) / 1000000,
           });
         }
       );
@@ -175,7 +116,7 @@ class CurrencyService {
       return {
         originalAmount: amount,
         copAmount: amount,
-        exchangeRate: 1
+        exchangeRate: 1,
       };
     }
 
@@ -184,7 +125,7 @@ class CurrencyService {
       return {
         originalAmount: result.originalAmount,
         copAmount: result.convertedAmount,
-        exchangeRate: result.exchangeRate
+        exchangeRate: result.exchangeRate,
       };
     } catch (error) {
       console.error(`Error converting ${fromCurrency} to COP:`, error);
@@ -194,7 +135,6 @@ class CurrencyService {
 
   async addCurrency(code, name, symbol) {
     return new Promise((resolve, reject) => {
-      // Check if currency already exists
       db.get('SELECT id FROM currencies WHERE code = ?', [code], (err, existingCurrency) => {
         if (err) {
           reject(new Error('Error de base de datos'));
@@ -206,17 +146,15 @@ class CurrencyService {
           return;
         }
 
-        // Insert new currency
         db.run(
           'INSERT INTO currencies (code, name, symbol) VALUES (?, ?, ?)',
           [code, name, symbol],
-          function(err) {
+          function (err) {
             if (err) {
               reject(new Error('Error al agregar la moneda'));
               return;
             }
 
-            // Get the created currency
             db.get('SELECT * FROM currencies WHERE id = ?', [this.lastID], (err, currency) => {
               if (err) {
                 reject(new Error('Error al obtener la moneda creada'));
@@ -272,8 +210,6 @@ class CurrencyService {
   }
 
   async getExchangeRateHistory(currencyCode, days = 30) {
-    // This would ideally fetch historical data from an API
-    // For now, we'll return the current rate
     return new Promise((resolve, reject) => {
       db.get(
         'SELECT exchange_rate, updated_at FROM currencies WHERE code = ?',
@@ -289,10 +225,9 @@ class CurrencyService {
             return;
           }
 
-          // Return simplified history (in production, you'd store historical data)
           const history = [{
             date: currency.updated_at,
-            rate: currency.exchange_rate
+            rate: currency.exchange_rate,
           }];
 
           resolve(history);
@@ -301,7 +236,6 @@ class CurrencyService {
     });
   }
 
-  // Get popular currencies based on usage
   async getPopularCurrencies(limit = 10) {
     return new Promise((resolve, reject) => {
       const query = `
