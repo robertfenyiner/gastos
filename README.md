@@ -162,6 +162,39 @@ No bloquean operación, pero serían buenos siguientes pasos:
 - cambiar la contraseña admin por una más fuerte
 - documentar backup de la base SQLite
 - revisar email/SMTP si se quiere activar esa parte
+- extender la app para ingresos si se quiere balance completo
+
+## Multi-moneda
+
+La app quedó funcional para registrar gastos en monedas como COP, USD, TRY y NGN.
+Al guardar un gasto en moneda extranjera, persiste:
+
+- monto original
+- moneda original
+- tasa de cambio usada (`exchange_rate`)
+- equivalente histórico en COP (`amount_cop`)
+
+Esto permite hacer consultas históricas sin depender de la tasa actual del mercado.
+
+### Fuente actual de tasas
+
+La conversión usa actualmente:
+
+- **open.er-api.com**
+- consulta base: **USD**
+- actualización automática diaria a las **06:00**
+- además se intenta una actualización al iniciar el servicio
+
+### Nota importante sobre diferencias con Google
+
+Las tasas guardadas pueden diferir ligeramente de lo que muestre Google u otra web en un momento dado, por razones como:
+
+- proveedor distinto
+- hora de actualización distinta
+- redondeo distinto
+- fuente interbancaria o agregador distinto
+
+La decisión actual del proyecto es usar una **fuente estable y consistente** para que el histórico en COP quede coherente en el tiempo, en vez de perseguir una coincidencia exacta con Google.
 
 ## Troubleshooting rápido
 

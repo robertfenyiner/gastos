@@ -58,6 +58,35 @@ node tools/gastos-assistant.js recent-expenses
 La app hoy soporta bien **gastos**.
 No existe todavía un módulo formal de **ingresos**.
 
+## Multi-moneda e histórico COP
+
+La app quedó ajustada para guardar gastos en moneda extranjera conservando:
+
+- monto original
+- moneda original
+- `exchange_rate` usado al momento del registro
+- `amount_cop` histórico guardado en la base
+
+Eso permite registrar, por ejemplo:
+- `50 TRY`
+- `10 USD`
+- `150 NGN`
+
+y consultar después el equivalente histórico en COP sin recalcular con la tasa del día actual.
+
+### Fuente de tasas actual
+
+La conversión usa actualmente **open.er-api.com** con base **USD**.
+
+La app actualiza tasas:
+- automáticamente todos los días a las **06:00**
+- y también intenta una actualización al iniciar el servicio
+
+### Criterio del proyecto
+
+Por ahora se mantiene esta fuente porque ofrece un comportamiento estable y consistente para el histórico.
+No se migrará a scraping de Google salvo que más adelante Robert lo pida explícitamente.
+
 Si se quiere soportar:
 - “agrega un ingreso de X”
 - “cuánto me ingresó el día X”
