@@ -37,6 +37,7 @@ export interface Expense {
   amount_cop?: number;
   exchange_rate?: number;
   description: string;
+  notes?: string | null;
   date: string;
   is_recurring: boolean;
   recurring_frequency?: string;
@@ -56,6 +57,7 @@ export interface ExpenseFormData {
   currencyId: number;
   amount: number;
   description: string;
+  notes?: string | null;
   date: string;
   isRecurring: boolean;
   recurringFrequency?: string;

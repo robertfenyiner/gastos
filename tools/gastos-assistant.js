@@ -103,6 +103,22 @@ function cleanDescription(text) {
     .trim();
 }
 
+
+function splitDescriptionAndNotes(text) {
+  const raw = cleanDescription(text);
+  const lower = raw.toLowerCase();
+  const separators = [' compre ', ' compré ', ' por ', ' para ', ','];
+  for (const sep of separators) {
+    const idx = lower.indexOf(sep);
+    if (idx > 0) {
+      const description = raw.slice(0, idx).trim();
+      const notes = raw.slice(idx + sep.length).trim();
+      if (description && notes) return { description, notes };
+    }
+  }
+  return { description: raw, notes: '' };
+}
+
 function inferCategory(description, categories) {
   const d = description.toLowerCase();
   const rules = [
@@ -169,6 +185,7 @@ async function addExpense(token, opts) {
     currencyId,
     amount: Number(opts.amount),
     description: opts.description,
+    notes: opts.notes || null,
     date: opts.date || today()
   };
   if (opts.recurringFrequency) {
@@ -244,11 +261,14 @@ async function handleNatural(token, text) {
     const date = detectDate(text);
     let description = cleanDescription(text);
     if (!description) description = 'Gasto registrado por chat';
-    const category = inferCategory(description, categories);
-    const data = await addExpense(token, { description, amount, category: category.name, currency, date, recurringFrequency });
+    const parts = splitDescriptionAndNotes(text);
+    description = parts.description || description;
+    const notes = parts.notes || '';
+    const category = inferCategory(`${description} ${notes}`.trim(), categories);
+    const data = await addExpense(token, { description, notes, amount, category: category.name, currency, date, recurringFrequency });
     return {
       action: 'add-expense',
-      interpreted: { description, amount, currency, date, category: category.name, recurringFrequency },
+      interpreted: { description, notes, amount, currency, date, category: category.name, recurringFrequency },
       expense: summarizeExpense(data.expense)
     };
   }
