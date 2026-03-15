@@ -58,7 +58,6 @@ const Expenses: React.FC = () => {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
-    notes: '',
     date: new Date().toISOString().split('T')[0],
     categoryId: '',
     currencyId: '',
@@ -164,7 +163,6 @@ const Expenses: React.FC = () => {
       const submitData = {
         amount: parseFloat(formData.amount),
         description: formData.description,
-        notes: formData.notes || null,
         date: formData.date,
         categoryId: parseInt(formData.categoryId),
         currencyId: parseInt(formData.currencyId),
@@ -209,7 +207,6 @@ const Expenses: React.FC = () => {
     setFormData({
       amount: expense.amount.toString(),
       description: expense.description,
-      notes: expense.notes || '',
       date: expense.date,
       categoryId: categoryId,
       currencyId: currencyId,
